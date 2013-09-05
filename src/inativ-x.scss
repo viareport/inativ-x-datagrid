@@ -1,0 +1,89 @@
+td, th { // est-ce bien raisonnable ?
+  width: 150px;
+  height: 20px;
+
+  .x-datagrid-cell {
+    height: 20px;
+    min-width: 150px;
+    padding: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+}
+
+.cell-header {
+  height: 40px;
+}
+
+.column-header { // t'es utilisé toi ?
+  white-space: normal;
+  vertical-align: middle;
+  padding: 2px;
+  width: 150px;
+}
+
+.row-header.cell {
+  width: 250px;
+}
+
+.scrollable-table-wrapper {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: hidden;
+  bottom: 50px;
+  & table {
+    border: 1px solid #e1e1e1;
+    width: 100%;
+    table-layout: fixed;
+
+  }
+}
+// pour rappel : https://devel.inativ.fr/dokuwiki/doku.php?id=convention:css : pas de camel case, tous les mots en minuscule séparé par des tirets (-)
+.contentWrapper { // et toi ?
+  height: 500px;
+  overflow: auto;
+}
+// pour rappel : https://devel.inativ.fr/dokuwiki/doku.php?id=convention:css : pas de camel case, tous les mots en minuscule séparé par des tirets (-)
+.columnHeaderWrapper {
+  background: #fdfdfd;
+  .form-input input {
+    line-height: normal;
+  }
+
+  .overflow-display, .overflow-display * {
+    overflow: visible;
+  }
+  & th {
+    padding-bottom: 5px;
+  }
+}
+
+.x-datagrid-tr:hover {
+
+  .import-action:hover {
+    cursor: pointer;
+  }
+}
+
+.no-border-right {
+  border-right: 1px solid transparent;
+}
+
+.no-border-left {
+  border-left: 1px solid transparent;
+}
+
+.no-border-bottom {
+  border-bottom: 1px solid transparent;
+}
+
+.no-border-top {
+  border-top: 1px solid transparent;
+}
+
+.overflow-display{
+  overflow: visible;
+}

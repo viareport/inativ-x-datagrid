@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>x-datagrid Demo - X-Tag</title>
+    <link rel="stylesheet" type="text/css" href="/dist/inativ-x.css"/>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        td, th {
+            border: 1px solid black;
+        }
+        x-table-column-input-filter input[type="text"] {
+            width: 90%;
+        }
+        body {
+            padding: 50px 0 0 20px;
+        }
+
+
+        x-cell-editor {
+            background-color: cyan;
+            position: absolute;
+            display: inline-block;
+            min-width: 150px;
+            min-height: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <x-datagrid editable
+                cell-height="20" cell-width="100"
+                class="scrollable-table-wrapper">
+    </x-datagrid>
+</body>
+
+<script type="text/javascript" src="/demo/x-tag-core.js"></script>      
+<script type="text/javascript" src="/demo/main.js"></script>      
+<script type="text/javascript">
+
+    document.addEventListener('DOMComponentsLoaded', function(){
+        var datagrid = document.querySelector('x-datagrid');
+
+        var content = [];
+        for (var index=0 ; index<1000 ; index++) {
+            content.push([{value: "A"+index},{value: "B"+index},{value: "C"+index}]);
+        }
+
+        datagrid.data = {
+            colHeader: [[{value: 'column1', filter: true},{value: 'column2'},{value: 'column3'}]],
+            content: content
+        };
+    }, false);
+
+</script>
+
+</html>
