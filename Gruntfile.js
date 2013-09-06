@@ -57,7 +57,14 @@ module.exports = function(grunt) {
                 }
             }
         },
-        bumpup: ['package.json'],
+        bumpup: {
+            options: {
+                version: function (old, type) {
+                    return old.replace(/([\d])+$/, grunt.option('wc-version'));
+                }
+            },
+            file: 'package.json'
+        }, 
         testem: {
             options: {
                 'launch_in_ci': [
