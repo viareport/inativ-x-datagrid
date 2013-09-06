@@ -1,14 +1,13 @@
 {
   "name": "inativ-x-datagrid",
   "description": "Le Datagrid aka \"excel.js\"",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": {
     "type": "git",
     "url": "git://github.com:viareport/inativ-x-datagrid.git"
   },
   "main": "./dist/main.js",
-  "keywords": [
-  ],
+  "keywords": [],
   "dependencies": {
     "inativ-x-inputfilter": "0.1.0"
   },

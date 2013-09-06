@@ -1,6 +1,6 @@
 require('inativ-x-inputfilter');
 
-(function(){  
+(function(){
     /* Methods ou on a juste un wrapper (x-datagrid) autour d'une table */
     /* Les perfs sont meilleurs qu'avec l'autre technique, mais il faudrait quand même utiliser la technique de w2ui */
     function escapeRegExp(string) {
@@ -30,7 +30,7 @@ require('inativ-x-inputfilter');
                     if (! grid._isResizing && grid.columnHeaderWrapper.style.width !== '100%') {
                         grid._isResizing = true;
                         setTimeout(function() {
-                            grid.updateIfScrollBar(grid.getDisplayData().content.length);
+                            grid.updateIfScrollBar(grid.displayedData.length);
                             grid._isResizing = false;
                         }, 500);
                     }
@@ -42,8 +42,12 @@ require('inativ-x-inputfilter');
             }
         },
         events: {
-            dataUpdated: function dataUpdated() {
-                this.render();
+            contentUpdated: function contentUpdated() {
+                this._displayedData = null;
+                this.renderContent(0);
+            },
+            headerUpdated: function headerUpdated() {
+                this.renderHeader(this.data);
             },
             click: function (elem) {
                 //this.render(this.sort(elem.target.parentNode.cellIndex), this.calculateCurrentLine());
@@ -61,6 +65,7 @@ require('inativ-x-inputfilter');
                 }
             },
             filter: function (e) {
+                this._displayedData = null;
                 this.lastCurrentRow = 0;
                 if (e.detail.filterValue === undefined || e.detail.filterValue === "") {
                     delete this._filters[e.detail.column];
@@ -73,23 +78,58 @@ require('inativ-x-inputfilter');
         accessors: {
             data: {
                 set: function (data) {
-                    this._data = data;
-                    this._nbRow = data.content.length;
-                    var event = new CustomEvent('dataUpdated');
-                    this.dispatchEvent(event);
+                    this._data = {};
+                    this.header = data.colHeader;
+                    this.content = data.content;
                 },
                 get: function () {
                     return this._data;
                 }
             },
-            filter: {
-                set: function (index, value) {
-                    this._filters[index] = value;
+            header: {
+                set: function (header) {
+                    this._data.colHeader = header;
+                    var event = new CustomEvent('headerUpdated');
+                    this.dispatchEvent(event);
                 },
-                get: function (index) {
-                    return this._filters[index];
+                get: function () {
+                    return this._data.colHeader;
+                }
+            },
+            content: {
+                set: function (content) {
+                    this._data.content = []; // Okazou on viendrait du setData
+                    this._nbRow = content.length;
+
+                    for (var i = 0; i < content.length; i++) {
+                        this._data.content.push({
+                            originIndex: i,
+                            rowValue: content[i]
+                        });
+                    }
+                    var event = new CustomEvent('contentUpdated');
+                    this.dispatchEvent(event);
+                },
+                get: function() {
+                    return this._data.content;
+                }
+            },
+            displayedData: {
+                get: function() {
+                    if (!this._displayedData) {
+                        var filteredData = this._data.content;
+
+                        this._filters.forEach(function (filter, columnIndex) {
+                            filteredData = this.applyFilter(filter, columnIndex, filteredData);
+                        }, this);
+
+                        this._displayedData = filteredData;
+                    }
+
+                    return this._displayedData;
                 }
             }
+
         },
         methods: {
             render: function render(data, firstDisplay) {
@@ -136,13 +176,13 @@ require('inativ-x-inputfilter');
                 this.columnHeaderWrapper.appendChild(tableColHeader);
             },
             renderContent: function renderContent(currentRowDisplay) {
-                var displayData = this.getDisplayData();
+                var displayData = this.displayedData;
                 var tableContent = document.createElement("table");
                 tableContent.setAttribute('id', 'tableContent');
                 var firstRowCreate = currentRowDisplay - this.cachedRow;
                 var lastRowCreate = currentRowDisplay + this._nbRowDisplay + this.cachedRow;
 
-                this.updateIfScrollBar(displayData.content.length);
+                this.updateIfScrollBar(displayData.length);
 
                 if (currentRowDisplay === 0) {
                     this.contentWrapper.scrollTop = 0;
@@ -155,8 +195,8 @@ require('inativ-x-inputfilter');
                 if (currentRowDisplay !== firstRowCreate) {
                     tableContent.appendChild(this.simulateMultiRow(firstRowCreate));
                 }
-                if (lastRowCreate > displayData.content.length) {
-                    lastRowCreate = displayData.content.length;
+                if (lastRowCreate > displayData.length) {
+                    lastRowCreate = displayData.length;
                 }
 
 
@@ -167,22 +207,22 @@ require('inativ-x-inputfilter');
                     var tr = document.createElement("tr");
                     tr.setAttribute('class', 'x-datagrid-tr');
                     var columnIndex = 0;
-                    for (; columnIndex < displayData.content[rowIndex].length; columnIndex++) {
+                    for (; columnIndex < displayData[rowIndex].rowValue.length; columnIndex++) {
                         var td = document.createElement("td");
                         td.setAttribute('class', 'x-datagrid-td');
-                        if (displayData.content[rowIndex][columnIndex].events) {
-                            this.bindCustomEvents(displayData.content[rowIndex][columnIndex].events, td);
+                        if (displayData[rowIndex].rowValue[columnIndex].events) {
+                            this.bindCustomEvents(displayData[rowIndex].rowValue[columnIndex].events, td);
                         }
                         //TODO : class pourrait etre un tableau
-                        td.innerHTML = "<div class='x-datagrid-cell " + displayData.content[rowIndex][columnIndex].class + "'>" + displayData.content[rowIndex][columnIndex].value + "</div>";
+                        td.innerHTML = "<div class='x-datagrid-cell " + displayData[rowIndex].rowValue[columnIndex].class + "'>" + displayData[rowIndex].rowValue[columnIndex].value + "</div>";
                         tr.appendChild(td);
                     }
                     fragment.appendChild(tr);
                 }
                 tableContent.appendChild(fragment);
                 // S'il y a plus de lignes que celles que l'on affiche
-                if (lastRowCreate < displayData.content.length) {
-                    var nbRowAfterCurrent = displayData.content.length - lastRowCreate;
+                if (lastRowCreate < displayData.length) {
+                    var nbRowAfterCurrent = displayData.length - lastRowCreate;
                     tableContent.appendChild(this.simulateMultiRow(nbRowAfterCurrent));
                     //et on en profite pour enlever la taille du scroll sur le tableau des colonnes headers
                 }
@@ -195,38 +235,26 @@ require('inativ-x-inputfilter');
                     throw new Error('a pas le column index pour sorter la data');
                 }
                 var displayData = new Object(this._data);
-                var sortedData = displayData.content.slice(0);
+                var sortedData = displayData.slice(0);
                 sortedData.sort(function (a, b) {
                     return a[columnIndex] - b[columnIndex];
                 });
-                displayData.content = sortedData;
+                displayData = sortedData;
                 return displayData;
             },
             calculateCurrentLine: function getDisplayFirstLine(scrollTop) {
                 var currentLine = Math.round(scrollTop / this.rowHeight);
                 return  currentLine;
             },
-            getDisplayData: function getDisplayData() {
-                var filteredData = this._data.content;
-
-                this._filters.forEach(function (filter, columnIndex) {
-                    filteredData = this.applyFilter(filter, columnIndex, filteredData);
-                }, this);
-
-                return {
-                    content: filteredData,
-                    colHeader: this._data.colHeader
-                };
-            },
             applyFilter: function applyFilter(filter, columnIndex, data) {
                 if (columnIndex === undefined) {
                     throw new Error('Empty column index');
                 }
 
-                var regExp = new RegExp(escapeRegExp(filter), "i");
+                var regExp = new RegExp('^' + escapeRegExp(filter), "i");
 
                 return data.filter(function (row) {
-                    var elem = row[columnIndex].value;
+                    var elem = row.rowValue[columnIndex].value;
                     return regExp.test(elem);
                 });
             },
@@ -258,7 +286,7 @@ require('inativ-x-inputfilter');
         }
     });
 
-    //Recuperation de la taille de la scrollbar selon le navigateur
+//Recuperation de la taille de la scrollbar selon le navigateur
     function getScrollBarWidth() {
         var inner = document.createElement('p');
         inner.style.width = "100%";
