@@ -47,7 +47,7 @@ require('inativ-x-inputfilter');
                 this.renderContent(0);
             },
             headerUpdated: function headerUpdated() {
-                this.renderHeader(this.data);
+                this.renderHeaders(this.data);
             },
             click: function (elem) {
                 //this.render(this.sort(elem.target.parentNode.cellIndex), this.calculateCurrentLine());
@@ -55,13 +55,15 @@ require('inativ-x-inputfilter');
             scroll: function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                //this._scrollTop = Number(e.target.scrollTop);
-                var currentRow = this.calculateCurrentLine(Number(e.target.scrollTop));
+                if (e.target === this.contentWrapper) {
+                    //this._scrollTop = Number(e.target.scrollTop);
+                    var currentRow = this.calculateCurrentLine(Number(e.target.scrollTop));
 
-                var diffBetweenLastCurrentRow = Math.abs(currentRow - this.lastCurrentRow);
-                if (diffBetweenLastCurrentRow > this._nbRowDisplay) {
-                    this.lastCurrentRow = currentRow;
-                    this.renderContent(currentRow);
+                    var diffBetweenLastCurrentRow = Math.abs(currentRow - this.lastCurrentRow);
+                    if (diffBetweenLastCurrentRow > this._nbRowDisplay) {
+                        this.lastCurrentRow = currentRow;
+                        this.renderContent(currentRow);
+                    }
                 }
             },
             filter: function (e) {
@@ -135,10 +137,10 @@ require('inativ-x-inputfilter');
             render: function render(data, firstDisplay) {
                 firstDisplay = firstDisplay || 0;
                 var displayData = data || this._data;
-                this.renderHeader(displayData);
+                this.renderHeaders(displayData);
                 this.renderContent(firstDisplay);
             },
-            renderHeader: function renderHeader(data) {
+            renderHeaders: function renderHeaders(data) {
                 var tableColHeader = document.createElement("table");
 
                 if (!data) {
@@ -146,34 +148,44 @@ require('inativ-x-inputfilter');
                 }
                 for (var j = 0; j < data.colHeader.length; j++) {
                     var trHeader = document.createElement("tr");
-                    var tdHeader = {};
                     var colHeader;
                     for (var i = 0; i < data.colHeader[j].length; i++) {
                         colHeader = data.colHeader[j][i];
-                        tdHeader = document.createElement("th");
-                        tdHeader.setAttribute('class', 'sortable');
-                        if (colHeader.rowspan) {
-                            tdHeader.setAttribute('rowspan', colHeader.rowspan);
-                        }
-                        if (colHeader.class){
-                            tdHeader.setAttribute('class', tdHeader.getAttribute('class')+' '+colHeader.class);
-                        }
-                        tdHeader.innerHTML = "<div class='x-datagrid-cell'>" + colHeader.value + "</div>";
-                        if (colHeader.filter) {
-                            var filter = document.createElement('x-inputfilter');
-                            if (colHeader.defaultFilter) {
-                                filter.setAttribute('defaultFilter', colHeader.defaultFilter);
-                                this._filters[i] = colHeader.defaultFilter;
-                            }
-                            filter.setAttribute('column', i);
-                            tdHeader.appendChild(filter);
-                        }
+                        var tdHeader = this.renderHeader(colHeader, i);
                         trHeader.appendChild(tdHeader);
                     }
                     tableColHeader.appendChild(trHeader);
                 }
                 this.columnHeaderWrapper.innerHTML = '';
                 this.columnHeaderWrapper.appendChild(tableColHeader);
+            },
+            renderHeader: function renderHeader(colHeader, coldIdx) {
+                var tdHeader = document.createElement("th");
+                if (colHeader.class) {
+                    tdHeader.classList.add(colHeader.class);
+                }
+                if (colHeader.element) {
+                    tdHeader.appendChild(colHeader.element);
+                } else {
+                    tdHeader.setAttribute('class', 'sortable');
+                    if (colHeader.rowspan) {
+                        tdHeader.setAttribute('rowspan', colHeader.rowspan);
+                    }
+                    if (colHeader.class){
+                        tdHeader.setAttribute('class', tdHeader.getAttribute('class')+' '+colHeader.class);
+                    }
+                    tdHeader.innerHTML = "<div class='x-datagrid-cell'>" + colHeader.value + "</div>";
+                    if (colHeader.filter) {
+                        var filter = document.createElement('x-inputfilter');
+                        if (colHeader.defaultFilter) {
+                            filter.setAttribute('defaultFilter', colHeader.defaultFilter);
+                            this._filters[i] = colHeader.defaultFilter;
+                        }
+                        filter.setAttribute('column', coldIdx);
+                        tdHeader.appendChild(filter);
+                    }
+                }
+                return tdHeader;
             },
             renderContent: function renderContent(currentRowDisplay) {
                 var displayData = this.displayedData;
