@@ -1,6 +1,6 @@
 require('inativ-x-inputfilter');
 
-(function(){
+(function () {
     /* Methods ou on a juste un wrapper (x-datagrid) autour d'une table */
     /* Les perfs sont meilleurs qu'avec l'autre technique, mais il faudrait quand même utiliser la technique de w2ui */
     function escapeRegExp(string) {
@@ -26,10 +26,10 @@ require('inativ-x-inputfilter');
             },
             inserted: function inserted() {
                 var grid = this;
-                window.onresize = function(e) {
-                    if (! grid._isResizing && grid.columnHeaderWrapper.style.width !== '100%') {
+                window.onresize = function (e) {
+                    if (!grid._isResizing && grid.columnHeaderWrapper.style.width !== '100%') {
                         grid._isResizing = true;
-                        setTimeout(function() {
+                        setTimeout(function () {
                             grid.updateIfScrollBar(grid.displayedData.length);
                             grid._isResizing = false;
                         }, 500);
@@ -112,12 +112,12 @@ require('inativ-x-inputfilter');
                     var event = new CustomEvent('contentUpdated');
                     this.dispatchEvent(event);
                 },
-                get: function() {
+                get: function () {
                     return this._data.content;
                 }
             },
             displayedData: {
-                get: function() {
+                get: function () {
                     if (!this._displayedData) {
                         var filteredData = this._data.content;
 
@@ -171,8 +171,8 @@ require('inativ-x-inputfilter');
                     if (colHeader.rowspan) {
                         tdHeader.setAttribute('rowspan', colHeader.rowspan);
                     }
-                    if (colHeader.class){
-                        tdHeader.setAttribute('class', tdHeader.getAttribute('class')+' '+colHeader.class);
+                    if (colHeader.class) {
+                        tdHeader.setAttribute('class', tdHeader.getAttribute('class') + ' ' + colHeader.class);
                     }
                     tdHeader.innerHTML = "<div class='x-datagrid-cell'>" + colHeader.value + "</div>";
                     if (colHeader.filter) {
@@ -344,6 +344,7 @@ require('inativ-x-inputfilter');
     function getContentWrapperHeight() {
         var contentWrapper = document.createElement('div');
         contentWrapper.setAttribute('class', 'contentWrapper scrollable-table-wrapper');
+        //TODO On devrait s'insérer dans le parent de la grille plutôt que le body (possible hauteurs différentes)
         document.body.appendChild(contentWrapper);
         var contentWrapperHeight = contentWrapper.offsetHeight;
         document.body.removeChild(contentWrapper);
