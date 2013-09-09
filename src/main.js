@@ -208,13 +208,14 @@ require('inativ-x-inputfilter');
                     tr.setAttribute('class', 'x-datagrid-tr');
                     var columnIndex = 0;
                     for (; columnIndex < displayData[rowIndex].rowValue.length; columnIndex++) {
-                        var td = document.createElement("td");
+                        var td = document.createElement("td"),
+                            cellData = displayData[rowIndex].rowValue[columnIndex];
                         td.setAttribute('class', 'x-datagrid-td');
-                        if (displayData[rowIndex].rowValue[columnIndex].events) {
-                            this.bindCustomEvents(displayData[rowIndex].rowValue[columnIndex].events, td);
+                        if (cellData.events) {
+                            this.bindCustomEvents(cellData.events, td);
                         }
                         //TODO : class pourrait etre un tableau
-                        td.innerHTML = "<div class='x-datagrid-cell " + displayData[rowIndex].rowValue[columnIndex].class + "'>" + displayData[rowIndex].rowValue[columnIndex].value + "</div>";
+                        td.innerHTML = "<div class='x-datagrid-cell " + cellData.class + "'>" + (cellData.value || '') + "</div>";
                         tr.appendChild(td);
                     }
                     fragment.appendChild(tr);
