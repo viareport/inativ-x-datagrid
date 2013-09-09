@@ -162,7 +162,7 @@ require('inativ-x-inputfilter');
             renderHeader: function renderHeader(colHeader, coldIdx) {
                 var tdHeader = document.createElement("th");
                 if (colHeader.class) {
-                    tdHeader.classList.add(colHeader.class);
+                    tdHeader.className += ' ' + colHeader.class;
                 }
                 if (colHeader.element) {
                     tdHeader.appendChild(colHeader.element);
@@ -179,7 +179,7 @@ require('inativ-x-inputfilter');
                         var filter = document.createElement('x-inputfilter');
                         if (colHeader.defaultFilter) {
                             filter.setAttribute('defaultFilter', colHeader.defaultFilter);
-                            this._filters[i] = colHeader.defaultFilter;
+                            this._filters[coldIdx] = colHeader.defaultFilter;
                         }
                         filter.setAttribute('column', coldIdx);
                         tdHeader.appendChild(filter);
