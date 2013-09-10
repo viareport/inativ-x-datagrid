@@ -11,9 +11,9 @@ require('inativ-x-inputfilter');
         lifecycle: {
             created: function created() {
                 this.contentWrapper = document.createElement('div');
-                this.contentWrapper.setAttribute('class', 'contentWrapper scrollable-table-wrapper');
+                this.contentWrapper.setAttribute('class', 'contentWrapper scrollable-table-wrapper'); //FIXME no camel case
                 this.columnHeaderWrapper = document.createElement('div');
-                this.columnHeaderWrapper.setAttribute('class', 'columnHeaderWrapper');
+                this.columnHeaderWrapper.setAttribute('class', 'columnHeaderWrapper'); //FIXME no camel case
                 this.rowHeight = getTrHeight();
                 var contentWrapperHeight = getContentWrapperHeight();
                 this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
@@ -41,6 +41,7 @@ require('inativ-x-inputfilter');
             removed: function removed() {
             },
             attributeChanged: function attributedChanged() {
+            //TODO editable
             }
         },
         events: {
@@ -50,6 +51,16 @@ require('inativ-x-inputfilter');
             },
             headerUpdated: function headerUpdated() {
                 this.renderHeaders(this.data);
+            },
+            cellChanged: function dataUpdated(e) {
+                var cell = e.detail.cell,
+                    newValue = e.detail.newValue;
+
+                this.data.content[cell.cellRow].rowValue[cell.cellColumn].value = newValue;
+                cell.cellValue = newValue;
+                cell.querySelector('div').innerHTML = newValue; //TODO colHeader.cellTemplate
+
+                //TODO cacher la ligne si les données ne matchent plus les filtres ?
             },
             click: function (elem) {
                 //this.render(this.sort(elem.target.parentNode.cellIndex), this.calculateCurrentLine());
@@ -192,9 +203,10 @@ require('inativ-x-inputfilter');
             renderContent: function renderContent(currentRowDisplay) {
                 var displayData = this.displayedData;
                 var tableContent = document.createElement("table");
-                tableContent.setAttribute('id', 'tableContent');
-                var firstRowCreate = currentRowDisplay - this.cachedRow;
-                var lastRowCreate = currentRowDisplay + this._nbRowDisplay + this.cachedRow;
+                tableContent.setAttribute('id', 'tableContent'); //FIXME pas de garantie d'unicité + pas de camel case
+                var firstRowCreate = currentRowDisplay - this.cachedRow,
+                    lastRowCreate = currentRowDisplay + this._nbRowDisplay + this.cachedRow,
+                    isEditable = this.hasAttribute('editable');
 
                 this.updateIfScrollBar(displayData.length);
 
@@ -223,6 +235,13 @@ require('inativ-x-inputfilter');
                     for (; columnIndex < displayData[rowIndex].rowValue.length; columnIndex++) {
                         var td = document.createElement("td"),
                             cellData = displayData[rowIndex].rowValue[columnIndex];
+
+                        if (isEditable) {
+                            td.cellValue = cellData.value;
+                            td.cellRow = displayData[rowIndex].originIndex;
+                            td.cellColumn = columnIndex;
+                        }
+
                         td.setAttribute('class', 'x-datagrid-td');
                         if (cellData.events) {
                             this.bindCustomEvents(cellData.events, td);
@@ -244,6 +263,11 @@ require('inativ-x-inputfilter');
                 this.contentWrapper.innerHTML = '';
 
                 this.contentWrapper.appendChild(tableContent);
+
+                if (isEditable) {
+                    var editor = document.createElement('x-cell-editor');
+                    this.contentWrapper.appendChild(editor);
+                }
             },
             sort: function sortData(columnIndex) {
                 if (!columnIndex) {
@@ -345,7 +369,7 @@ require('inativ-x-inputfilter');
 
     function getContentWrapperHeight() {
         var contentWrapper = document.createElement('div');
-        contentWrapper.setAttribute('class', 'contentWrapper scrollable-table-wrapper');
+        contentWrapper.setAttribute('class', 'contentWrapper scrollable-table-wrapper'); //FIXME pas de camel case (et tant qu'à faire, des noms de classes spécifiques)
         //TODO On devrait s'insérer dans le parent de la grille plutôt que le body (possible hauteurs différentes)
         document.body.appendChild(contentWrapper);
         var contentWrapperHeight = contentWrapper.offsetHeight;
