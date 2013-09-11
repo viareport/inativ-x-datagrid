@@ -10,9 +10,8 @@ require('inativ-x-inputfilter');
     xtag.register('x-datagrid', {
         lifecycle: {
             created: function created() {
-                this.classList.add("scrollable-table-wrapper");
                 this.contentWrapper = document.createElement('div');
-                this.contentWrapper.setAttribute('class', 'contentWrapper scrollable-table-wrapper'); //FIXME no camel case
+                this.contentWrapper.setAttribute('class', 'contentWrapper'); //FIXME no camel case
                 this.columnHeaderWrapper = document.createElement('div');
                 this.columnHeaderWrapper.setAttribute('class', 'columnHeaderWrapper'); //FIXME no camel case
                 this.rowHeight = getTrHeight();
@@ -277,16 +276,26 @@ require('inativ-x-inputfilter');
                 return displayData;
             },
             calculateContentHeight: function calculateContentHeight() {
-                var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;    //TODO moins hauteur scrollbar
+                var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
                 if (contentWrapperHeight <= 0) {
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
-                this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
-                var nbColumnsDisplay = Math.floor(this.offsetWidth / this.querySelector('th').offsetWidth);
+
+                var cellMinWidth = this.getAttribute('cell-width') || 150,
+                    nbColumnsDisplay = Math.floor(this.offsetWidth / cellMinWidth),
+                    tableMinWidth = this.header[0].length * cellMinWidth;
+
                 if (nbColumnsDisplay < this.header[0].length) {
                     contentWrapperHeight -= this.scrollBarWidth;
+                    tableMinWidth -= this.scrollBarWidth;
+                } else {
+                    this.contentWrapper.style.width = '100%';
                 }
-                this.contentWrapper.style.height = '' + contentWrapperHeight + "px";
+                this.contentWrapper.style.height = contentWrapperHeight + 'px';
+                this.contentWrapper.style.minWidth = tableMinWidth + 'px';
+                this.columnHeaderWrapper.style.minWidth = tableMinWidth + 'px';
+
+                this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
                 this.cachedRow = this._nbRowDisplay * 2;
             },
             calculateCurrentLine: function getDisplayFirstLine(scrollTop) {
@@ -306,18 +315,26 @@ require('inativ-x-inputfilter');
                 });
             },
             simulateMultiRow: function (nbRow) {
-                var tr = document.createElement("tr");
+                var tr = document.createElement("tr"),
+                    td = document.createElement("td");
+                td.setAttribute("colspan", this.header[0].length);
+                tr.appendChild(td);
                 tr.style.height = (nbRow * this.rowHeight) + 'px';
                 return tr;
             },
             updateIfScrollBar: function updateIfScrollBar(nbSource) {
+                var headerTable = this.columnHeaderWrapper.querySelector('table');
                 if (nbSource > this._nbRowDisplay) {
-                    var fullWidth = this.columnHeaderWrapper.querySelector('table').offsetWidth;
+                    this.columnHeaderWrapper.style.width = '100%';
+                    headerTable.style.width = '100%';
+                    var fullWidth = headerTable.offsetWidth;
                     this.contentWrapper.style.width = fullWidth + 'px';
                     this.columnHeaderWrapper.style.width = (fullWidth - this.scrollBarWidth) + 'px';
+                    headerTable.style.width = (fullWidth - this.scrollBarWidth) + 'px';
                 } else {
                     this.contentWrapper.style.width = '100%';
                     this.columnHeaderWrapper.style.width = '100%';
+                    headerTable.style.width = '100%';
                 }
             },
             bindCustomEvents: function (eventsTab, element) {

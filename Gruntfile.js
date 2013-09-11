@@ -2,6 +2,7 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-compass');
+    grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -21,6 +22,15 @@ module.exports = function(grunt) {
                 options: {
                     config: 'assets/compass_config.rb'
                 }
+            }
+        },
+
+        concat: {
+            webcomponents_css: {
+                src: [
+                    'node_modules/**/dist/inativ-x.css'
+                ],
+                dest: 'demo/webcomponents.css'
             }
         },
         connect: {

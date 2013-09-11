@@ -1,16 +1,10 @@
-td, th { // est-ce bien raisonnable ?
-  width: 150px;
-  height: 20px;
-
-  .x-datagrid-cell {
+.x-datagrid-cell {
     height: 20px;
-    min-width: 150px;
     padding: 2px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: middle;
-  }
 }
 
 .cell-header {
@@ -33,6 +27,7 @@ x-datagrid {
     display: block;
     overflow-x: auto;
     overflow-y: hidden;
+    min-width: 100%;
 }
 
 // pour rappel : https://devel.inativ.fr/dokuwiki/doku.php?id=convention:css : pas de camel case, tous les mots en minuscule séparé par des tirets (-)
@@ -40,7 +35,7 @@ x-datagrid {
     overflow-x: hidden;
     position: relative;
 
-    & table {
+    table {
         overflow-y: auto;
         width: 100%;
         border: 1px solid #e1e1e1;
@@ -53,6 +48,9 @@ x-datagrid {
   background: #fdfdfd;
   .form-input input {
     line-height: normal;
+  }
+  table {
+      table-layout: fixed;
   }
 
   .overflow-display, .overflow-display * {
