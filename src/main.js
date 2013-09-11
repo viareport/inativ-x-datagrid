@@ -26,10 +26,10 @@ require('inativ-x-inputfilter');
             inserted: function inserted() {
                 var grid = this;
                 window.onresize = function (e) {
-                    if (grid.columnHeaderWrapper.style.width !== '100%') {
+                    //if (grid.columnHeaderWrapper.style.width !== '100%') {
                         grid.calculateContentHeight();
                         grid.updateIfScrollBar(grid.displayedData.length);
-                    }
+                    //}
                 };
             },
             removed: function removed() {
@@ -282,6 +282,10 @@ require('inativ-x-inputfilter');
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
                 this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
+                var nbColumnsDisplay = Math.floor(this.offsetWidth / this.querySelector('th').offsetWidth);
+                if (nbColumnsDisplay < this.header[0].length) {
+                    contentWrapperHeight -= this.scrollBarWidth;
+                }
                 this.contentWrapper.style.height = '' + contentWrapperHeight + "px";
                 this.cachedRow = this._nbRowDisplay * 2;
             },
@@ -307,9 +311,14 @@ require('inativ-x-inputfilter');
                 return tr;
             },
             updateIfScrollBar: function updateIfScrollBar(nbSource) {
-                this.columnHeaderWrapper.style.width = '100%';
-                var columnHeaderWrapperWidth = (nbSource > this._nbRowDisplay) ? (this.columnHeaderWrapper.offsetWidth - this.scrollBarWidth) + 'px' : '100%';
-                this.columnHeaderWrapper.style.width = columnHeaderWrapperWidth;
+                if (nbSource > this._nbRowDisplay) {
+                    var fullWidth = this.columnHeaderWrapper.querySelector('table').offsetWidth;
+                    this.contentWrapper.style.width = fullWidth + 'px';
+                    this.columnHeaderWrapper.style.width = (fullWidth - this.scrollBarWidth) + 'px';
+                } else {
+                    this.contentWrapper.style.width = '100%';
+                    this.columnHeaderWrapper.style.width = '100%';
+                }
             },
             bindCustomEvents: function (eventsTab, element) {
                 var events = eventsTab;
