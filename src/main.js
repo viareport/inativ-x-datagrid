@@ -10,31 +10,25 @@ require('inativ-x-inputfilter');
     xtag.register('x-datagrid', {
         lifecycle: {
             created: function created() {
+                this.classList.add("scrollable-table-wrapper");
                 this.contentWrapper = document.createElement('div');
                 this.contentWrapper.setAttribute('class', 'contentWrapper scrollable-table-wrapper'); //FIXME no camel case
                 this.columnHeaderWrapper = document.createElement('div');
                 this.columnHeaderWrapper.setAttribute('class', 'columnHeaderWrapper'); //FIXME no camel case
                 this.rowHeight = getTrHeight();
-                var contentWrapperHeight = getContentWrapperHeight();
-                this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
-                this.contentWrapper.style.height = ''+contentWrapperHeight+"px";
                 this.appendChild(this.columnHeaderWrapper);
                 this.appendChild(this.contentWrapper);
                 this._scrollTop = 0;
                 this._filters = [];
                 this.lastCurrentRow = 0;
-                this.cachedRow = this._nbRowDisplay * 2;
                 this.scrollBarWidth = getScrollBarWidth();
             },
             inserted: function inserted() {
                 var grid = this;
                 window.onresize = function (e) {
-                    if (!grid._isResizing && grid.columnHeaderWrapper.style.width !== '100%') {
-                        grid._isResizing = true;
-                        setTimeout(function () {
-                            grid.updateIfScrollBar(grid.displayedData.length);
-                            grid._isResizing = false;
-                        }, 500);
+                    if (grid.columnHeaderWrapper.style.width !== '100%') {
+                        grid.calculateContentHeight();
+                        grid.updateIfScrollBar(grid.displayedData.length);
                     }
                 };
             },
@@ -171,6 +165,7 @@ require('inativ-x-inputfilter');
                 }
                 this.columnHeaderWrapper.innerHTML = '';
                 this.columnHeaderWrapper.appendChild(tableColHeader);
+                this.calculateContentHeight();
             },
             renderHeader: function renderHeader(colHeader, coldIdx) {
                 var tdHeader = document.createElement("th");
@@ -281,6 +276,15 @@ require('inativ-x-inputfilter');
                 displayData = sortedData;
                 return displayData;
             },
+            calculateContentHeight: function calculateContentHeight() {
+                var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;    //TODO moins hauteur scrollbar
+                if (contentWrapperHeight <= 0) {
+                    throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
+                }
+                this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
+                this.contentWrapper.style.height = '' + contentWrapperHeight + "px";
+                this.cachedRow = this._nbRowDisplay * 2;
+            },
             calculateCurrentLine: function getDisplayFirstLine(scrollTop) {
                 var currentLine = Math.round(scrollTop / this.rowHeight);
                 return  currentLine;
@@ -364,16 +368,10 @@ require('inativ-x-inputfilter');
         document.body.appendChild(table);
         var trOffsetHeight = tr.offsetHeight;
         document.body.removeChild(table);
+        if(trOffsetHeight === 0) {
+            throw new Error('Erreur lors du calcul de la hauteur disponible pour une ligne');
+        }
         return trOffsetHeight;
     }
 
-    function getContentWrapperHeight() {
-        var contentWrapper = document.createElement('div');
-        contentWrapper.setAttribute('class', 'contentWrapper scrollable-table-wrapper'); //FIXME pas de camel case (et tant qu'à faire, des noms de classes spécifiques)
-        //TODO On devrait s'insérer dans le parent de la grille plutôt que le body (possible hauteurs différentes)
-        document.body.appendChild(contentWrapper);
-        var contentWrapperHeight = contentWrapper.offsetHeight;
-        document.body.removeChild(contentWrapper);
-        return contentWrapperHeight;
-    }
 })();

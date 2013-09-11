@@ -9,14 +9,22 @@
         table {
             border-collapse: collapse;
         }
+
         td, th {
             border: 1px solid black;
         }
+
         x-table-column-input-filter input[type="text"] {
             width: 90%;
         }
         body {
             padding: 50px 0 0 20px;
+			// TODO height 100% fonctionne pas pourquoi ?
+            top:0;
+            bottom:0;
+            left:0;
+            right:0;
+            position:absolute;
         }
 
 
@@ -40,17 +48,30 @@
 <script type="text/javascript" src="/demo/x-tag-core.js"></script>      
 <script type="text/javascript" src="/demo/main.js"></script>      
 <script type="text/javascript">
-
-    document.addEventListener('DOMComponentsLoaded', function(){
+    document.addEventListener('DOMComponentsLoaded', function () {
         var datagrid = document.querySelector('x-datagrid');
 
         var content = [];
-        for (var index=0 ; index<1000 ; index++) {
-            content.push([{value: "A"+index},{value: "B"+index},{value: "C"+index}]);
+        for (var index = 0; index < 1000; index++) {
+            content.push([
+                {value: "A" + index},
+                {value: "B" + index},
+                {value: "C" + index},
+                {value: "D" + index},
+                {value: "E" + index}
+            ]);
         }
 
         datagrid.data = {
-            colHeader: [[{value: 'column1', filter: true},{value: 'column2'},{value: 'column3'}]],
+            colHeader: [
+                [
+                    {value: 'column1', filter: true},
+                    {value: 'column2'},
+                    {value: 'column3'},
+                    {value: 'column4'},
+                    {value: 'column5'}
+                ]
+            ],
             content: content
         };
     }, false);
