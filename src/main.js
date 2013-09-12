@@ -21,14 +21,13 @@ require('inativ-x-inputfilter');
                 this._filters = [];
                 this.lastCurrentRow = 0;
                 this.scrollBarWidth = getScrollBarWidth();
+                this.tableMinWidth = 0;
             },
             inserted: function inserted() {
                 var grid = this;
                 window.onresize = function (e) {
-                    //if (grid.columnHeaderWrapper.style.width !== '100%') {
-                        grid.calculateContentHeight();
-                        grid.updateIfScrollBar(grid.displayedData.length);
-                    //}
+                    grid.calculateContentSize();
+                    grid.calculateHeaderWidth(grid.displayedData.length);
                 };
             },
             removed: function removed() {
@@ -164,7 +163,7 @@ require('inativ-x-inputfilter');
                 }
                 this.columnHeaderWrapper.innerHTML = '';
                 this.columnHeaderWrapper.appendChild(tableColHeader);
-                this.calculateContentHeight();
+                this.calculateContentSize();
             },
             renderHeader: function renderHeader(colHeader, coldIdx) {
                 var tdHeader = document.createElement("th");
@@ -202,7 +201,7 @@ require('inativ-x-inputfilter');
                     lastRowCreate = currentRowDisplay + this._nbRowDisplay + this.cachedRow,
                     isEditable = this.hasAttribute('editable');
 
-                this.updateIfScrollBar(displayData.length);
+                this.calculateHeaderWidth(displayData.length);
 
                 if (currentRowDisplay === 0) {
                     this.contentWrapper.scrollTop = 0;
@@ -275,25 +274,33 @@ require('inativ-x-inputfilter');
                 displayData = sortedData;
                 return displayData;
             },
-            calculateContentHeight: function calculateContentHeight() {
+            calculateHeaderWidth: function calculateHeaderWidth(nbSource) {
+                this.columnHeaderWrapper.style.width = "100%";
+                if (nbSource > this._nbRowDisplay) {
+                    this.columnHeaderWrapper.style.width = (this.columnHeaderWrapper.offsetWidth - this.scrollBarWidth) + 'px';
+                    this.columnHeaderWrapper.style.minWidth = (this.tableMinWidth - this.scrollBarWidth) + 'px';
+                } else {
+                    this.columnHeaderWrapper.style.minWidth = this.tableMinWidth + 'px';
+                }
+            },
+            calculateContentSize: function calculateContentSize() {
                 var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
                 if (contentWrapperHeight <= 0) {
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
                 var cellMinWidth = this.getAttribute('cell-width') || 150,
-                    nbColumnsDisplay = Math.floor(this.offsetWidth / cellMinWidth),
-                    tableMinWidth = this.header[0].length * cellMinWidth;
+                    nbColumnsDisplay = Math.floor(this.offsetWidth / cellMinWidth);
+
+                this.tableMinWidth = this.header[0].length * cellMinWidth;
 
                 if (nbColumnsDisplay < this.header[0].length) {
                     contentWrapperHeight -= this.scrollBarWidth;
-                    tableMinWidth -= this.scrollBarWidth;
                 } else {
                     this.contentWrapper.style.width = '100%';
                 }
                 this.contentWrapper.style.height = contentWrapperHeight + 'px';
-                this.contentWrapper.style.minWidth = tableMinWidth + 'px';
-                this.columnHeaderWrapper.style.minWidth = tableMinWidth + 'px';
+                this.contentWrapper.style.minWidth = this.tableMinWidth + 'px';
 
                 this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
                 this.cachedRow = this._nbRowDisplay * 2;
@@ -322,21 +329,6 @@ require('inativ-x-inputfilter');
                 tr.style.height = (nbRow * this.rowHeight) + 'px';
                 return tr;
             },
-            updateIfScrollBar: function updateIfScrollBar(nbSource) {
-                var headerTable = this.columnHeaderWrapper.querySelector('table');
-                if (nbSource > this._nbRowDisplay) {
-                    this.columnHeaderWrapper.style.width = '100%';
-                    headerTable.style.width = '100%';
-                    var fullWidth = headerTable.offsetWidth;
-                    this.contentWrapper.style.width = fullWidth + 'px';
-                    this.columnHeaderWrapper.style.width = (fullWidth - this.scrollBarWidth) + 'px';
-                    headerTable.style.width = (fullWidth - this.scrollBarWidth) + 'px';
-                } else {
-                    this.contentWrapper.style.width = '100%';
-                    this.columnHeaderWrapper.style.width = '100%';
-                    headerTable.style.width = '100%';
-                }
-            },
             bindCustomEvents: function (eventsTab, element) {
                 var events = eventsTab;
                 var eventTypes = Object.keys(events);
@@ -355,7 +347,7 @@ require('inativ-x-inputfilter');
         }
     });
 
-//Recuperation de la taille de la scrollbar selon le navigateur
+    //Recuperation de la taille de la scrollbar selon le navigateur
     function getScrollBarWidth() {
         var inner = document.createElement('p');
         inner.style.width = "100%";

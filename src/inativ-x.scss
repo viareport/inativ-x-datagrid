@@ -28,6 +28,9 @@ x-datagrid {
     overflow-x: auto;
     overflow-y: hidden;
     min-width: 100%;
+    table {
+      width:100%;
+    }
 }
 
 // pour rappel : https://devel.inativ.fr/dokuwiki/doku.php?id=convention:css : pas de camel case, tous les mots en minuscule séparé par des tirets (-)
