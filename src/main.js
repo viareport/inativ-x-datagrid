@@ -7,6 +7,13 @@ require('inativ-x-inputfilter');
         return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     }
 
+    function defaultTemplate(value) {
+        if (value === null) {
+            return '';
+        }
+        return value;
+    }
+
     xtag.register('x-datagrid', {
         lifecycle: {
             created: function created() {
@@ -39,21 +46,21 @@ require('inativ-x-inputfilter');
         events: {
             contentUpdated: function contentUpdated() {
                 this._displayedData = null;
-                this.renderContent(0);
+                this.renderContent(this.lastCurrentRow);
             },
             headerUpdated: function headerUpdated() {
                 this.renderHeaders(this.data);
             },
-            cellChanged: function dataUpdated(e) {
+            /*cellChanged: function dataUpdated(e) {
                 var cell = e.detail.cell,
                     newValue = e.detail.newValue;
 
-                this.data.content[cell.cellRow].rowValue[cell.cellColumn].value = newValue;
+                this.data.content[cell.cellRow].rowValue[cell.cellIndex].value = newValue;
                 cell.cellValue = newValue;
                 cell.querySelector('div').innerHTML = newValue; //TODO colHeader.cellTemplate
 
                 //TODO cacher la ligne si les données ne matchent plus les filtres ?
-            },
+            },*/
             click: function (elem) {
                 //this.render(this.sort(elem.target.parentNode.cellIndex), this.calculateCurrentLine());
             },
@@ -232,7 +239,6 @@ require('inativ-x-inputfilter');
                         if (isEditable) {
                             td.cellValue = cellData.value;
                             td.cellRow = displayData[rowIndex].originIndex;
-                            td.cellColumn = columnIndex;
                         }
 
                         td.setAttribute('class', 'x-datagrid-td');
@@ -241,7 +247,7 @@ require('inativ-x-inputfilter');
                         }
                         //TODO : class pourrait etre un tableau
                         var cellClass = cellData.class || '';
-                        td.innerHTML = "<div class='x-datagrid-cell " + cellClass + "'>" + (cellData.value || '') + "</div>";
+                        td.innerHTML = "<div class='x-datagrid-cell " + cellClass + "'>" + this.getCellTemplate(columnIndex)(cellData.value) + "</div>";
                         tr.appendChild(td);
                     }
                     fragment.appendChild(tr);
@@ -261,6 +267,9 @@ require('inativ-x-inputfilter');
                     var editor = document.createElement('x-cell-editor');
                     this.contentWrapper.appendChild(editor);
                 }
+            },
+            getCellTemplate: function getCellTemplate(columnIndex) {
+                return this.header[0][columnIndex].cellTemplate || defaultTemplate;
             },
             sort: function sortData(columnIndex) {
                 if (!columnIndex) {
