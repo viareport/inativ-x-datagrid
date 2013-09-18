@@ -148,6 +148,10 @@ require('inativ-x-inputfilter');
 
         },
         methods: {
+            registerPlugin: function register(plugin) {
+                plugin.datagrid = this;
+                this.contentWrapper.appendChild(plugin);
+            },
             render: function render(data, firstDisplay) {
                 firstDisplay = firstDisplay || 0;
                 var displayData = data || this._data;
