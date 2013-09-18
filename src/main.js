@@ -19,6 +19,8 @@ require('inativ-x-inputfilter');
             created: function created() {
                 this.contentWrapper = document.createElement('div');
                 this.contentWrapper.setAttribute('class', 'contentWrapper'); //FIXME no camel case
+                this.tableContent = document.createElement("table");
+                this.contentWrapper.appendChild(this.tableContent);
                 this.columnHeaderWrapper = document.createElement('div');
                 this.columnHeaderWrapper.setAttribute('class', 'columnHeaderWrapper'); //FIXME no camel case
                 this.rowHeight = getTrHeight();
@@ -125,7 +127,7 @@ require('inativ-x-inputfilter');
                     this.dispatchEvent(event);
                 },
                 get: function () {
-                    return this._data.content;
+                    throw new Error("No getter available on datagrid content");
                 }
             },
             displayedData: {
@@ -202,11 +204,9 @@ require('inativ-x-inputfilter');
             },
             renderContent: function renderContent(currentRowDisplay) {
                 var displayData = this.displayedData;
-                var tableContent = document.createElement("table");
-                tableContent.setAttribute('id', 'tableContent'); //FIXME pas de garantie d'unicité + pas de camel case
+                var tableContentFragment = document.createDocumentFragment();
                 var firstRowCreate = currentRowDisplay - this.cachedRow,
-                    lastRowCreate = currentRowDisplay + this._nbRowDisplay + this.cachedRow,
-                    isEditable = this.hasAttribute('editable');
+                    lastRowCreate = currentRowDisplay + this._nbRowDisplay + this.cachedRow;
 
                 this.calculateHeaderWidth(displayData.length);
 
@@ -219,7 +219,7 @@ require('inativ-x-inputfilter');
                 }
                 // Création de la première ligne qui doit simuler la taille de toutes les lignes présentes avant la ligne courante
                 if (currentRowDisplay !== firstRowCreate) {
-                    tableContent.appendChild(this.simulateMultiRow(firstRowCreate));
+                    tableContentFragment.appendChild(this.simulateMultiRow(firstRowCreate));
                 }
                 if (lastRowCreate > displayData.length) {
                     lastRowCreate = displayData.length;
@@ -236,10 +236,9 @@ require('inativ-x-inputfilter');
                         var td = document.createElement("td"),
                             cellData = displayData[rowIndex].rowValue[columnIndex];
 
-                        if (isEditable) {
                             td.cellValue = cellData.value;
                             td.cellRow = displayData[rowIndex].originIndex;
-                        }
+                        
 
                         td.setAttribute('class', ['x-datagrid-td', cellData.cellClass || null].join(' '));       // FIXME utiliser classlist
 
@@ -257,21 +256,17 @@ require('inativ-x-inputfilter');
                     }
                     fragment.appendChild(tr);
                 }
-                tableContent.appendChild(fragment);
+                tableContentFragment.appendChild(fragment);
                 // S'il y a plus de lignes que celles que l'on affiche
                 if (lastRowCreate < displayData.length) {
                     var nbRowAfterCurrent = displayData.length - lastRowCreate;
-                    tableContent.appendChild(this.simulateMultiRow(nbRowAfterCurrent));
+                    tableContentFragment.appendChild(this.simulateMultiRow(nbRowAfterCurrent));
                     //et on en profite pour enlever la taille du scroll sur le tableau des colonnes headers
                 }
-                this.contentWrapper.innerHTML = '';
+                this.tableContent.innerHTML = '';
 
-                this.contentWrapper.appendChild(tableContent);
+                this.tableContent.appendChild(tableContentFragment);
 
-                if (isEditable) {
-                    var editor = document.createElement('x-cell-editor');
-                    this.contentWrapper.appendChild(editor);
-                }
             },
             getCellTemplate: function getCellTemplate(columnIndex) {
                 return this.header[0][columnIndex].cellTemplate || defaultTemplate;
