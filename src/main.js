@@ -241,13 +241,18 @@ require('inativ-x-inputfilter');
                             td.cellRow = displayData[rowIndex].originIndex;
                         }
 
-                        td.setAttribute('class', 'x-datagrid-td');
+                        td.setAttribute('class', ['x-datagrid-td', cellData.cellClass || null].join(' '));       // FIXME utiliser classlist
+
                         if (cellData.events) {
                             this.bindCustomEvents(cellData.events, td);
                         }
+                        td.innerHTML = '';
+                        if(cellData.errorMessage){         // c'est pas beau mais impossible de passer par le dataset pour un tooltip css (pas de polyfill pour IE)
+                            td.innerHTML += '<span class="error-message">'+cellData.errorMessage+'</span>';
+                        }
                         //TODO : class pourrait etre un tableau
                         var cellClass = cellData.class || '';
-                        td.innerHTML = "<div class='x-datagrid-cell " + cellClass + "'>" + this.getCellTemplate(columnIndex)(cellData.value) + "</div>";
+                        td.innerHTML += "<div class='x-datagrid-cell " + cellClass + "'>" + this.getCellTemplate(columnIndex)(cellData.value) + "</div>";
                         tr.appendChild(td);
                     }
                     fragment.appendChild(tr);

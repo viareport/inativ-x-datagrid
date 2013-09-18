@@ -95,9 +95,9 @@ module.exports = function(grunt) {
         grunt.log.writeln("----------");
     });
 
-    grunt.registerTask('build', ['clean', 'browserify', 'jshint', 'compass', 'copy']);
+    grunt.registerTask('build', ['clean', 'browserify','compass', 'copy']);
     grunt.registerTask('demo', ['build', 'launchDemo']);
-    grunt.registerTask('test', ['build', 'testem']);
+    grunt.registerTask('test', ['build',  'jshint',  'testem']);
     grunt.registerTask('dist', ['test', 'bumpup']);
 
     grunt.registerTask('default', ['build', 'watch']);
