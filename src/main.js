@@ -356,6 +356,9 @@ require('inativ-x-inputfilter');
                         that.dispatchEvent(customEvent);
                     });
                 });
+            },
+            getThColumnHeader: function getColumnHeaderTdWidth(colIndex) {
+                return this.columnHeaderWrapper.querySelector("tr:nth-child(1) th:nth-child(" + colIndex + ")");
             }
         }
     });
