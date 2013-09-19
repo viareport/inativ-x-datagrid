@@ -1,6 +1,6 @@
 require('inativ-x-inputfilter');
-
 (function () {
+    'use strict';
     /* Methods ou on a juste un wrapper (x-datagrid) autour d'une table */
     /* Les perfs sont meilleurs qu'avec l'autre technique, mais il faudrait quand même utiliser la technique de w2ui */
     function escapeRegExp(string) {
@@ -31,12 +31,16 @@ require('inativ-x-inputfilter');
                 this.lastCurrentRow = 0;
                 this.scrollBarWidth = getScrollBarWidth();
                 this.tableMinWidth = 0;
+                this.plugins = [];
             },
             inserted: function inserted() {
                 var grid = this;
                 window.onresize = function (e) {
                     grid.calculateContentSize();
                     grid.calculateHeaderWidth(grid.displayedData.length);
+                    this.plugins.forEach(function(plugin){
+                        plugin.onResize();
+                    });
                 };
             },
             removed: function removed() {
@@ -150,7 +154,8 @@ require('inativ-x-inputfilter');
         methods: {
             registerPlugin: function register(plugin) {
                 plugin.datagrid = this;
-                this.contentWrapper.appendChild(plugin);
+                plugin.append();
+                this.plugins.push(plugin);
             },
             render: function render(data, firstDisplay) {
                 firstDisplay = firstDisplay || 0;
