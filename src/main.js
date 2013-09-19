@@ -35,15 +35,18 @@ require('inativ-x-inputfilter');
             },
             inserted: function inserted() {
                 var grid = this;
+                this.originOnResize = window.onresize || function(){};
                 window.onresize = function (e) {
+                    this.originOnResize();
                     grid.calculateContentSize();
                     grid.calculateHeaderWidth(grid.displayedData.length);
-                    this.plugins.forEach(function(plugin){
+                    grid.plugins.forEach(function(plugin){
                         plugin.onResize();
                     });
                 };
             },
             removed: function removed() {
+                window.onresize = this.originOnResize;
             },
             attributeChanged: function attributedChanged() {
             //TODO editable
