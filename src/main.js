@@ -37,7 +37,7 @@ require('inativ-x-inputfilter');
                 var grid = this;
                 this.originOnResize = window.onresize || function(){};
                 window.onresize = function (e) {
-                    this.originOnResize();
+                    grid.originOnResize();
                     grid.calculateContentSize();
                     grid.calculateHeaderWidth(grid.displayedData.length);
                     grid.plugins.forEach(function(plugin){
