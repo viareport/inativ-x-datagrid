@@ -250,7 +250,7 @@ require('inativ-x-inputfilter');
 
                             td.cellValue = cellData.value;
                             td.cellRow = displayData[rowIndex].originIndex;
-                        
+
 
                         td.setAttribute('class', ['x-datagrid-td', cellData.cellClass || null].join(' '));       // FIXME utiliser classlist
 
@@ -367,6 +367,9 @@ require('inativ-x-inputfilter');
             },
             getThColumnHeader: function getColumnHeaderTdWidth(colIndex) {
                 return this.columnHeaderWrapper.querySelector("tr:nth-child(1) th:nth-child(" + colIndex + ")");
+            },
+            getCellAt: function getCellAt(xCoord, yCoord) {
+                return this.contentWrapper.querySelector("table tr:nth-child("+(yCoord+1)+") td:nth-child(" + (xCoord+1) + ")");
             }
         }
     });

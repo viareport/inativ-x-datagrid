@@ -56,9 +56,16 @@ testSuite.addTest("Affichage de la grille", function (scenario, asserter) {
         return asserter.count("th")() === 3;
     }, "Le tableau doit contenir 3 column headers");
 
+    var actualContent =
+
     asserter.assertTrue(function () {
         return asserter.count(".x-datagrid-td")() === 9;
     }, "Le tableau doit contenir 9 cellules de contenu");
+
+    asserter.assertTrue(function () {
+        var cell = datagrid.getCellAt(1,2);
+        return cell.textContent === "B3";
+    }, "La cellule de coordonnées 1,2 doit contenir 'B3'");
 });
 
 testSuite.addTest("Application d'un filtre", function (scenario, asserter) {
