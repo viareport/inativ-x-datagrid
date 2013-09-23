@@ -9,5 +9,6 @@ test-result/*
 .gitignore
 .jshintrc
 .npmignore
+GruntFile.js
 npm-debug.log
 testem.yml
