@@ -32,6 +32,7 @@ require('inativ-x-inputfilter');
                 this.scrollBarWidth = getScrollBarWidth();
                 this.tableMinWidth = 0;
                 this.plugins = [];
+                this.firstRowCreate = null;
             },
             inserted: function inserted() {
                 var grid = this;
@@ -217,8 +218,9 @@ require('inativ-x-inputfilter');
             renderContent: function renderContent(currentRowDisplay) {
                 var displayData = this.displayedData;
                 var tableContentFragment = document.createDocumentFragment();
-                var firstRowCreate = currentRowDisplay - this.cachedRow,
-                    lastRowCreate = currentRowDisplay + this._nbRowDisplay + this.cachedRow;
+                var lastRowCreate = Math.min(displayData.length, currentRowDisplay + this._nbRowDisplay + this.cachedRow);
+
+                this.firstRowCreate = Math.max(0, currentRowDisplay - this.cachedRow);
 
                 this.calculateHeaderWidth(displayData.length);
 
@@ -226,32 +228,23 @@ require('inativ-x-inputfilter');
                     this.contentWrapper.scrollTop = 0;
                 }
 
-                if (firstRowCreate < 0) {
-                    firstRowCreate = 0;
-                }
+                var rowIndex = this.firstRowCreate;
                 // Création de la première ligne qui doit simuler la taille de toutes les lignes présentes avant la ligne courante
-                if (currentRowDisplay !== firstRowCreate) {
-                    tableContentFragment.appendChild(this.simulateMultiRow(firstRowCreate));
+                if (currentRowDisplay !== this.firstRowCreate) {
+                    tableContentFragment.appendChild(this.simulateMultiRow(this.firstRowCreate));
+                    this.firstRowCreate--;
                 }
-                if (lastRowCreate > displayData.length) {
-                    lastRowCreate = displayData.length;
-                }
-
-
-                var rowIndex = firstRowCreate;
                 var fragment = document.createDocumentFragment();
                 for (; rowIndex < lastRowCreate; rowIndex++) {
                     var tr = document.createElement("tr");
                     tr.setAttribute('class', 'x-datagrid-tr');
                     var columnIndex = 0;
                     for (; columnIndex < displayData[rowIndex].rowValue.length; columnIndex++) {
-                        var td = document.createElement("td"),
-                            cellData = displayData[rowIndex].rowValue[columnIndex];
+                        var cellData = displayData[rowIndex].rowValue[columnIndex],
+                            td = document.createElement("td");
 
-                            td.cellValue = cellData.value;
-                            td.cellRow = displayData[rowIndex].originIndex;
-
-
+                        td.cellValue = cellData.value;
+                        td.cellRow = displayData[rowIndex].originIndex;
                         td.setAttribute('class', ['x-datagrid-td', cellData.cellClass || null].join(' '));       // FIXME utiliser classlist
 
                         if (cellData.events) {
@@ -369,7 +362,7 @@ require('inativ-x-inputfilter');
                 return this.columnHeaderWrapper.querySelector("tr:nth-child(1) th:nth-child(" + colIndex + ")");
             },
             getCellAt: function getCellAt(xCoord, yCoord) {
-                return this.contentWrapper.querySelector("table tr:nth-child("+(yCoord+1)+") td:nth-child(" + (xCoord+1) + ")");
+                return this.contentWrapper.querySelector("table tr:nth-child("+(yCoord-this.firstRowCreate+1)+") td:nth-child(" + (xCoord+1) + ")");
             }
         }
     });
