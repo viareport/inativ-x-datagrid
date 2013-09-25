@@ -1,5 +1,16 @@
 require('inativ-x-inputfilter');
 (function () {
+    // Structure manipulé par le datagrid
+    //[
+    //  {
+    //      originIndex: integer,
+    //      rowValue: [
+    //          Cell,
+    //          Cell
+    //      ]
+    //  },
+    //  {originIndex: integer, rowValue: []}
+    //]
     'use strict';
     /* Methods ou on a juste un wrapper (x-datagrid) autour d'une table */
     /* Les perfs sont meilleurs qu'avec l'autre technique, mais il faudrait quand même utiliser la technique de w2ui */
@@ -243,6 +254,7 @@ require('inativ-x-inputfilter');
                         var cellData = displayData[rowIndex].rowValue[columnIndex],
                             td = document.createElement("td");
 
+                        // TODO au lieu de ça, injecter la cell dans le td
                         td.cellValue = cellData.value;
                         td.cellRow = displayData[rowIndex].originIndex;
                         td.setAttribute('class', ['x-datagrid-td', cellData.cellClass || null].join(' '));       // FIXME utiliser classlist
@@ -413,3 +425,17 @@ require('inativ-x-inputfilter');
     }
 
 })();
+
+// cellClass utilisé pour le td
+// class utilisé pour la div dans le td
+
+function Cell(obj) {
+    this.value = obj.value || "";
+    this.cellClass = obj.cellClass || "";
+    this.errorMessage = obj.errorMessage || "";
+    this.events = obj.events || null;
+    this.class = obj.class || "";
+    this.rowIndex = obj.rowIndex || null; //TODO A utiiser en remplacement du td.cellRow
+    this.columnIndex = obj.columnIndex || null; //TODO Non utilisé pour le moment
+}
+module.exports = {'Cell': Cell};
