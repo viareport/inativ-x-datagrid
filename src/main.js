@@ -25,6 +25,10 @@ require('inativ-x-inputfilter');
         return value;
     }
 
+    function defaultFilterFunction(element, regex) {
+        return regex.test(element);
+    }
+
     xtag.register('x-datagrid', {
         lifecycle: {
             created: function created() {
@@ -340,11 +344,13 @@ require('inativ-x-inputfilter');
                     throw new Error('Empty column index');
                 }
 
-                var regExp = new RegExp('^' + escapeRegExp(filter), "i");
+                var regExp = new RegExp('^' + escapeRegExp(filter), "i"),
+                    datagrid = this;
 
                 return data.filter(function (row) {
-                    var elem = row.rowValue[columnIndex].value;
-                    return regExp.test(elem);
+                    var elem = row.rowValue[columnIndex].value,
+                        filterFn = datagrid.header[0][columnIndex].filterFn || defaultFilterFunction;
+                    return filterFn(elem, regExp);
                 });
             },
             simulateMultiRow: function (nbRow) {
