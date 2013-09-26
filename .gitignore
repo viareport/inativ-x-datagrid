@@ -6,3 +6,5 @@ test/testbuild.js
 test-result/testem-ci.tap
 *.tgz
 testem*.json
+test/main.*
+demo/main.*

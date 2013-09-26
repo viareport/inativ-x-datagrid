@@ -21,7 +21,8 @@
     "grunt-browserify": "~1.2.4",
     "grunt-bumpup": "~0.2.0",
     "grunt-testem": "~0.3.6",
-    "spatester": "0.0.1"
+    "spatester": "0.0.1",
+    "grunt-subgrunt": "~0.2.2"
   },
   "engines": {
     "node": "~0.10.18"

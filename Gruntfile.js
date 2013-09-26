@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-compass');
@@ -10,12 +10,14 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-bumpup');
     grunt.loadNpmTasks('grunt-testem');
+    grunt.loadNpmTasks('grunt-subgrunt');
 
     // Project configuration.
     grunt.initConfig({
-        
         clean: {
-            main: ['dist/*.js', 'dist/*.css', 'testem*json']
+            build: ['dist/*.js', 'dist/*.css'],
+            test: ['test/testbuild.js', 'test/main.*', 'test/x-tag-core.js', 'testem*json'],
+            demo: ['demo/*.js', 'demo/*.css']
         },
         compass: {
             main: {
@@ -24,18 +26,25 @@ module.exports = function(grunt) {
                 }
             }
         },
-
         concat: {
-            webcomponents_css: {
+            demo: {
                 src: [
-                    'node_modules/**/dist/inativ-x.css'
+                    './node_modules/inativ-x-*/dist/*.css',
+                    './dist/inativ-x.css'
                 ],
-                dest: 'demo/webcomponents.css'
+                dest: 'demo/main.css'
+            },
+            test: {
+                src: [
+                    './node_modules/*/dist/*.css',
+                    './dist/inativ-x.css'
+                ],
+                dest: 'test/main.css'
             }
         },
         connect: {
             demo: {
-                options:{
+                options: {
                     port: 3001,
                     keepalive: true,
                     hostname: '*'
@@ -43,27 +52,45 @@ module.exports = function(grunt) {
             }
         },
         copy: {
-            main: {
+            dist: {
                 files: [
-                    {src: ['src/main.js'], dest: 'dist/main.js'}
+                    {src: ['src/main.js'], dest: 'dist/main.js'},
                 ]
             }
         },
-        jshint:{
-            all: ['Gruntfile.js', 'src/main.js']
+        jshint: {
+            all: ['src/main.js']
         },
         watch: {
-            files: ['src/*.js', 'src/*.scss', 'test/test.js'],
-            tasks: ['build'],
+            build: {
+                files: ['src/*.js', 'src/*.scss', 'node_modules/inativ-*/dist/*.js', 'node_modules/inativ-*/dist/*.css'],
+                tasks: ['build']
+            },
+            dev: {
+                files: ['src/*.js', 'src/*.scss', 'node_modules/inativ-*/src/*.js', 'node_modules/inativ-*/src/*.scss'],
+                tasks: ['dev']
+            },
+            test: {
+                files: ['src/*.js', 'src/*.scss', 'test/test.js', 'test/TestemSuite.html'],
+                tasks: ['test']
+            },
+            demo: {
+                files: ['src/*.js', 'src/*.scss', 'demo/index.html'],
+                tasks: ['demo']
+            },
             options: {
                 spawn: false
             }
         },
         browserify: {
-            main: {
+            test: {
                 files: {
-                    'test/testbuild.js': ['test/test.js'],
-                    'demo/main.js': ['src/main.js']
+                    'test/main.js': ['lib/x-tag-core.js', 'src/main.js', 'test/test.js']
+                }
+            },
+            demo: {
+                files: {
+                    'demo/main.js': ['lib/x-tag-core.js', 'src/main.js']
                 }
             }
         },
@@ -74,7 +101,7 @@ module.exports = function(grunt) {
                 }
             },
             file: 'package.json'
-        }, 
+        },
         testem: {
             options: {
                 'launch_in_ci': [
@@ -84,6 +111,17 @@ module.exports = function(grunt) {
             main: {
                 src: [ 'test/TestemSuite.html' ],
                 dest: 'test-result/testem-ci.tap'
+            }
+        },
+        subgrunt: {
+            target1: {
+                options: {
+                    npmClean: false,
+                    npmInstall: false
+                },
+                projects: {
+                    'node_modules/inativ-x-inputfilter': ['build']
+                }
             }
         }
     });
@@ -95,10 +133,13 @@ module.exports = function(grunt) {
         grunt.log.writeln("----------");
     });
 
-    grunt.registerTask('build', ['clean', 'browserify','compass', 'copy']);
-    grunt.registerTask('demo', ['build', 'launchDemo']);
-    grunt.registerTask('test', ['build',  'jshint',  'testem']);
+    grunt.registerTask('build', ['clean:build', 'jshint', 'compass', 'copy:dist']);
+    grunt.registerTask('build_test', ['build', 'clean:test', 'concat:test', 'browserify:test']);
+    grunt.registerTask('demo', ['build', 'clean:demo', 'concat:demo', 'browserify:demo', 'launchDemo']);
+    grunt.registerTask('auto_test', ['build', 'build_test', 'testem']);
+    grunt.registerTask('test', ['build', 'build_test', 'testem']);
     grunt.registerTask('dist', ['test', 'bumpup']);
 
-    grunt.registerTask('default', ['build', 'watch']);
+    grunt.registerTask('dev', ['subgrunt', 'build', 'watch']);
+    grunt.registerTask('default', ['build', 'watch:build']);
 };
