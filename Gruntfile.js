@@ -32,7 +32,7 @@ module.exports = function (grunt) {
                     './node_modules/inativ-x-*/dist/*.css',
                     './dist/inativ-x.css'
                 ],
-                dest: 'demo/main.css'
+                dest: 'build/main.css'
             },
             test: {
                 src: [
@@ -90,7 +90,7 @@ module.exports = function (grunt) {
             },
             demo: {
                 files: {
-                    'demo/main.js': ['lib/x-tag-core.js', 'src/main.js']
+                    'build/main.js': ['lib/x-tag-core.js', 'src/main.js']
                 }
             }
         },
@@ -135,7 +135,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask('build', ['clean:build', 'jshint', 'compass', 'copy:dist']);
     grunt.registerTask('build_test', ['build', 'clean:test', 'concat:test', 'browserify:test']);
-    grunt.registerTask('build_demo', ['build', 'clean:demo', 'concat:demo', 'browserify:demo']);
+    grunt.registerTask('build_demo', ['build', 'concat:demo', 'browserify:demo']);
     grunt.registerTask('watch_demo', ['build_demo', 'watch:demo']);
     grunt.registerTask('demo', ['build_demo', 'launchDemo']);
     grunt.registerTask('auto_test', ['build', 'build_test', 'testem']);

@@ -18,6 +18,10 @@
   "white": false,
   "globals": {
     "assertEqual": true,
-    "Scenario": true
-  }
+    "Scenario": true,
+    "xtag": false,
+    "require": false,
+    "module": false
+  },
+  "quotmark"      : false
 }

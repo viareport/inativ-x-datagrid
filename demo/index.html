@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <title>x-datagrid Demo - X-Tag</title>
-    <link rel="stylesheet" type="text/css" href="/dist/inativ-x.css"/>
+    <link rel="stylesheet" type="text/css" href="/build/main.css"/>
+    <link rel="stylesheet" type="text/css" href="demo.css"/>
     <style>
         table {
             border-collapse: collapse;
@@ -43,7 +44,7 @@
     </x-datagrid>
 </body>
 
-<script type="text/javascript" src="/demo/main.js"></script>
+<script type="text/javascript" src="/build/main.js"></script>
 <script type="text/javascript">
     document.addEventListener('DOMComponentsLoaded', function () {
         var datagrid = document.querySelector('x-datagrid');
@@ -63,9 +64,9 @@
             colHeader: [
                 [
                     {value: 'column1', filter: true},
-                    {value: 'column2'},
+                    {value: 'column2', width: 10},
                     {value: 'column3'},
-                    {value: 'column4'},
+                    {value: 'column4', columnClass: 'test-column'},
                     {value: 'column5'}
                 ]
             ],

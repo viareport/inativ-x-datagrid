@@ -1,6 +1,6 @@
 require('inativ-x-inputfilter');
 (function () {
-    // Structure manipulé par le datagrid
+    // Structure manipulé par le content du datagrid
     //[
     //  {
     //      originIndex: integer,
@@ -48,11 +48,14 @@ require('inativ-x-inputfilter');
                 this.tableMinWidth = 0;
                 this.plugins = [];
                 this.firstRowCreate = null;
+
+                this.cellMinWidth = Number(this.getAttribute('cell-width') || 150);
+                
             },
             inserted: function inserted() {
                 var grid = this;
                 this.originOnResize = window.onresize || function(){};
-                window.onresize = function (e) {
+                window.onresize = function () {
                     grid.originOnResize();
                     grid.calculateContentSize();
                     grid.calculateHeaderWidth(grid.displayedData.length);
@@ -74,20 +77,8 @@ require('inativ-x-inputfilter');
                 this.renderContent(this.lastCurrentRow);
             },
             headerUpdated: function headerUpdated() {
+                this.calculateMinimumWidth(this.cellMinWidth);
                 this.renderHeaders(this.data);
-            },
-            /*cellChanged: function dataUpdated(e) {
-                var cell = e.detail.cell,
-                    newValue = e.detail.newValue;
-
-                this.data.content[cell.cellRow].rowValue[cell.cellIndex].value = newValue;
-                cell.cellValue = newValue;
-                cell.querySelector('div').innerHTML = newValue; //TODO colHeader.cellTemplate
-
-                //TODO cacher la ligne si les données ne matchent plus les filtres ?
-            },*/
-            click: function (elem) {
-                //this.render(this.sort(elem.target.parentNode.cellIndex), this.calculateCurrentLine());
             },
             scroll: function (e) {
                 e.preventDefault();
@@ -205,12 +196,18 @@ require('inativ-x-inputfilter');
             renderHeader: function renderHeader(colHeader, coldIdx) {
                 var tdHeader = document.createElement("th");
                 if (colHeader.class) {
-                    tdHeader.className += ' ' + colHeader.class;
+                    tdHeader.classList.add(colHeader.class);
+                }
+                if (this.header[0][coldIdx].columnClass) {
+                    tdHeader.classList.add(this.header[0][coldIdx].columnClass);
+                }
+                if (this.header[0][coldIdx].width) {
+                    tdHeader.style.width = this.header[0][coldIdx].width + "px";
                 }
                 if (colHeader.element) {
                     tdHeader.appendChild(colHeader.element);
                 } else {
-                    tdHeader.setAttribute('class', 'sortable');
+                    tdHeader.setAttribute('class', tdHeader.getAttribute('class') + ' ' + 'sortable');
                     if (colHeader.rowspan) {
                         tdHeader.setAttribute('rowspan', colHeader.rowspan);
                     }
@@ -259,9 +256,19 @@ require('inativ-x-inputfilter');
                             td = document.createElement("td");
 
                         // TODO au lieu de ça, injecter la cell dans le td
+                        if (this.header[0][columnIndex].width) {
+                            td.style.width = this.header[0][columnIndex].width + "px";
+                        }
+                        if (this.header[0][columnIndex].columnClass) {
+                            td.classList.add(this.header[0][columnIndex].columnClass);
+                        }
                         td.cellValue = cellData.value;
                         td.cellRow = displayData[rowIndex].originIndex;
-                        td.setAttribute('class', ['x-datagrid-td', cellData.cellClass || null].join(' '));       // FIXME utiliser classlist
+                        if (cellData.cellClass) {
+                            td.classList.add(cellData.cellClass);
+                        }
+                        td.classList.add('x-datagrid-td');
+                        //td.setAttribute('class', ['x-datagrid-td', cellData.cellClass || null].join(' '));       // FIXME utiliser classlist
 
                         if (cellData.events) {
                             this.bindCustomEvents(cellData.events, td);
@@ -313,16 +320,42 @@ require('inativ-x-inputfilter');
                     this.columnHeaderWrapper.style.minWidth = this.tableMinWidth + 'px';
                 }
             },
+            calculateMinimumWidth: function calculateMinimumWidth(cellMinWidth) {
+                this.tableMinWidth = 0;
+                /*var columnIndex = 0;
+                /*for (; columnIndex < this.header[0].length; columnIndex++) {
+                    this.tableMinWidth += this.header[0][columnIndex].width || cellMinWidth;
+                }*/
+                var table = document.createElement("table");
+                table.style.visibility = "hidden";
+                var trHeader = document.createElement("tr");
+                var ths = [];
+                for (var i = 0; i < this.header[0].length; i++) {
+                    var colHeader = this.header[0][i];
+                    var tdHeader = document.createElement("th");
+                    if (colHeader.columnClass) {
+                        tdHeader.classList.add(colHeader.columnClass);
+                    } else {
+                        tdHeader.style.width = cellMinWidth + 'px';
+                    }
+                    if (colHeader.width) {
+                        tdHeader.style.width = colHeader.width + 'px';
+                    }
+                    ths.push(tdHeader);
+                    trHeader.appendChild(tdHeader);
+                }
+                table.appendChild(trHeader);
+                document.body.appendChild(table);
+                this.tableMinWidth = trHeader.offsetWidth;
+                document.body.removeChild(table);
+            },
             calculateContentSize: function calculateContentSize() {
                 var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
                 if (contentWrapperHeight <= 0) {
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
-                var cellMinWidth = this.getAttribute('cell-width') || 150,
-                    nbColumnsDisplay = Math.floor(this.offsetWidth / cellMinWidth);
-
-                this.tableMinWidth = this.header[0].length * cellMinWidth;
+                var nbColumnsDisplay = Math.floor(this.offsetWidth / this.cellMinWidth);
 
                 if (nbColumnsDisplay < this.header[0].length) {
                     contentWrapperHeight -= this.scrollBarWidth;
@@ -354,10 +387,16 @@ require('inativ-x-inputfilter');
                 });
             },
             simulateMultiRow: function (nbRow) {
-                var tr = document.createElement("tr"),
+                var tr = document.createElement("tr");
+                var td;
+                var i = 0;
+                for(;i<this.header[0].length;i++) {
                     td = document.createElement("td");
-                td.setAttribute("colspan", this.header[0].length);
-                tr.appendChild(td);
+                    if(this.header[0][i].width) {
+                        td.style.width = this.header[0][i].width + "px";
+                    }
+                    tr.appendChild(td);
+                }
                 tr.style.height = (nbRow * this.rowHeight) + 'px';
                 return tr;
             },
@@ -414,6 +453,7 @@ require('inativ-x-inputfilter');
 
     function getTrHeight() {
         var table = document.createElement("table");
+        table.style.visibility = "hidden";
         var tr = document.createElement("tr");
         tr.setAttribute('class', 'x-datagrid-tr');
         var td = document.createElement("td");
@@ -434,8 +474,8 @@ require('inativ-x-inputfilter');
 
 // cellClass utilisé pour le td
 // class utilisé pour la div dans le td
-
 function Cell(obj) {
+    "use strict";
     this.value = obj.value || "";
     this.cellClass = obj.cellClass || "";
     this.errorMessage = obj.errorMessage || "";
