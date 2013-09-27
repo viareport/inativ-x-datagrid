@@ -278,7 +278,7 @@ require('inativ-x-inputfilter');
                             td.innerHTML += '<span class="error-message">'+cellData.errorMessage+'</span>';
                         }
                         //TODO : class pourrait etre un tableau
-                        var cellClass = cellData.class || '';
+                        var cellClass = cellData.class.join(' ') || '';
                         td.innerHTML += "<div class='x-datagrid-cell " + cellClass + "'>" + this.getCellTemplate(columnIndex)(cellData.value) + "</div>";
                         tr.appendChild(td);
                     }
@@ -480,7 +480,7 @@ function Cell(obj) {
     this.cellClass = obj.cellClass || "";
     this.errorMessage = obj.errorMessage || "";
     this.events = obj.events || null;
-    if(!Array.isArray(obj.class)) {
+    if(obj.class && !Array.isArray(obj.class)) {
         throw new Error('class on cell is an array');
     }
     this.class = obj.class || [];
