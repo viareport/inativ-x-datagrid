@@ -480,7 +480,7 @@ function Cell(obj) {
     this.cellClass = obj.cellClass || "";
     this.errorMessage = obj.errorMessage || "";
     this.events = obj.events || null;
-    if(obj.class && !obj.class.isArray()) {
+    if(!Array.isArray(obj.class)) {
         throw new Error('class on cell is an array');
     }
     this.class = obj.class || [];
