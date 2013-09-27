@@ -278,7 +278,7 @@ require('inativ-x-inputfilter');
                             td.innerHTML += '<span class="error-message">'+cellData.errorMessage+'</span>';
                         }
                         //TODO : class pourrait etre un tableau
-                        var cellClass = cellData.class.join(' ') || '';
+                        var cellClass = (cellData.class && cellData.class.join(' ')) || '';
                         td.innerHTML += "<div class='x-datagrid-cell " + cellClass + "'>" + this.getCellTemplate(columnIndex)(cellData.value) + "</div>";
                         tr.appendChild(td);
                     }
