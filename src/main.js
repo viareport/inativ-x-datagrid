@@ -480,7 +480,10 @@ function Cell(obj) {
     this.cellClass = obj.cellClass || "";
     this.errorMessage = obj.errorMessage || "";
     this.events = obj.events || null;
-    this.class = obj.class || "";
+    if(obj.class && !obj.class.isArray()) {
+        throw new Error('class on cell is an array');
+    }
+    this.class = obj.class || [];
     this.rowIndex = obj.rowIndex || null; //TODO A utiiser en remplacement du td.cellRow
     this.columnIndex = obj.columnIndex || null; //TODO Non utilisé pour le moment
 }
