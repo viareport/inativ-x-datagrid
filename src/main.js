@@ -196,7 +196,9 @@ require('inativ-x-inputfilter');
             renderHeader: function renderHeader(colHeader, coldIdx) {
                 var tdHeader = document.createElement("th");
                 if (colHeader.class) {
-                    tdHeader.classList.add(colHeader.class);
+                    colHeader.class.forEach(function(elem){
+                        tdHeader.classList.add(elem);
+                    });
                 }
                 if (this.header[0][coldIdx].columnClass) {
                     tdHeader.classList.add(this.header[0][coldIdx].columnClass);
@@ -210,9 +212,6 @@ require('inativ-x-inputfilter');
                     tdHeader.setAttribute('class', tdHeader.getAttribute('class') + ' ' + 'sortable');
                     if (colHeader.rowspan) {
                         tdHeader.setAttribute('rowspan', colHeader.rowspan);
-                    }
-                    if (colHeader.class) {
-                        tdHeader.setAttribute('class', tdHeader.getAttribute('class') + ' ' + colHeader.class);
                     }
                     tdHeader.innerHTML = "<div class='x-datagrid-cell'>" + colHeader.value + "</div>";
                     if (colHeader.filter) {
@@ -483,6 +482,8 @@ function Cell(obj) {
     if(obj.class && !Array.isArray(obj.class)) {
         throw new Error('class on cell is an array');
     }
+    this.rowspan = obj.rowspan || 0;
+    this.colspan = obj.colspan || 0;
     this.class = obj.class || [];
     this.rowIndex = obj.rowIndex || null; //TODO A utiiser en remplacement du td.cellRow
     this.columnIndex = obj.columnIndex || null; //TODO Non utilisé pour le moment
