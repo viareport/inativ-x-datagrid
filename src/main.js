@@ -321,13 +321,11 @@ require('inativ-x-inputfilter');
             },
             calculateMinimumWidth: function calculateMinimumWidth(cellMinWidth) {
                 this.tableMinWidth = 0;
-                /*var columnIndex = 0;
-                /*for (; columnIndex < this.header[0].length; columnIndex++) {
-                    this.tableMinWidth += this.header[0][columnIndex].width || cellMinWidth;
-                }*/
                 var table = document.createElement("table");
+                table.style.width = "auto";
                 table.style.visibility = "hidden";
                 var trHeader = document.createElement("tr");
+                trHeader.style.width = "auto";
                 var ths = [];
                 for (var i = 0; i < this.header[0].length; i++) {
                     var colHeader = this.header[0][i];
