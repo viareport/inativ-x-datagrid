@@ -98,9 +98,9 @@ require('inativ-x-inputfilter');
                 this._displayedData = null;
                 this.lastCurrentRow = 0;
                 if (e.detail.filterValue === undefined || e.detail.filterValue === "") {
-                    delete this._filters[e.detail.column];
+                    delete this._filters[e.detail.filterType];
                 } else {
-                    this._filters[e.detail.column] = e.detail.filterValue;
+                    this._filters[e.detail.filterType] = e.detail.filterValue;
                 }
                 this.renderContent(0);
             }
@@ -220,7 +220,7 @@ require('inativ-x-inputfilter');
                             filter.setAttribute('defaultFilter', colHeader.defaultFilter);
                             this._filters[coldIdx] = colHeader.defaultFilter;
                         }
-                        filter.setAttribute('column', coldIdx);
+                        filter.setAttribute('filterType', coldIdx);
                         tdHeader.appendChild(filter);
                     }
                 }
