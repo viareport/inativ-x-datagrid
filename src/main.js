@@ -397,6 +397,8 @@ require('inativ-x-inputfilter');
                 tr.style.height = (nbRow * this.rowHeight) + 'px';
                 return tr;
             },
+            
+            //TODO : privée ? bindCellEvts ?
             bindCustomEvents: function (eventsTab, element) {
                 var events = eventsTab;
                 var eventTypes = Object.keys(events);
@@ -404,9 +406,20 @@ require('inativ-x-inputfilter');
                 eventTypes.forEach(function (eventType) {
                     var eventName = eventType;
                     var customEventName = events[eventName].event;
-                    var data = events[eventName].data;
+                    
+                    if (events[eventName].data.hasOwnProperty('element')) {
+                        throw new Error('Reserved data property name "element"');
+                    }
+                    
+                    //TODO data.cell ?
+                    var data = {'element': element};
+                    for(var key in events[eventName].data) {
+                        data[key] = events[eventName].data[key];
+                    }
+
 
                     var customEvent = new CustomEvent(customEventName, {'detail': data, 'bubbles': true});
+
                     element.addEventListener(eventName, function () {
                         that.dispatchEvent(customEvent);
                     });
