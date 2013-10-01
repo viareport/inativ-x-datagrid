@@ -264,7 +264,7 @@ require('inativ-x-inputfilter');
                         td.cellValue = cellData.value;
                         td.cellRow = displayData[rowIndex].originIndex;
                         if (cellData.cellClass) {
-                            td.classList.add(cellData.cellClass);
+                            td.className = ' ' + cellData.cellClass;
                         }
                         td.classList.add('x-datagrid-td');
                         //td.setAttribute('class', ['x-datagrid-td', cellData.cellClass || null].join(' '));       // FIXME utiliser classlist
