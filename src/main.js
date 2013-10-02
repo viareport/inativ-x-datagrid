@@ -102,6 +102,7 @@ require('inativ-x-inputfilter');
                 } else {
                     this._filters[e.detail.filterType] = e.detail.filterValue;
                 }
+                this.contentWrapper.scrollTop = 0;
                 this.renderContent(0);
             }
         },
@@ -234,10 +235,6 @@ require('inativ-x-inputfilter');
                 this.firstRowCreate = Math.max(0, currentRowDisplay - this.cachedRow);
 
                 this.calculateHeaderWidth(displayData.length);
-
-                if (currentRowDisplay === 0) {
-                    this.contentWrapper.scrollTop = 0;
-                }
 
                 var rowIndex = this.firstRowCreate;
                 // Création de la première ligne qui doit simuler la taille de toutes les lignes présentes avant la ligne courante
