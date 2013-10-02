@@ -319,19 +319,15 @@ require('inativ-x-inputfilter');
             calculateMinimumWidth: function calculateMinimumWidth(cellMinWidth) {
                 this.tableMinWidth = 0;
                 var table = document.createElement("table");
-                table.style.width = "auto";
-                table.style.visibility = "hidden";
                 var trHeader = document.createElement("tr");
-                trHeader.style.width = "auto";
                 var ths = [];
                 for (var i = 0; i < this.header[0].length; i++) {
                     var colHeader = this.header[0][i];
                     var tdHeader = document.createElement("th");
                     if (colHeader.columnClass) {
                         tdHeader.classList.add(colHeader.columnClass);
-                    } else {
-                        tdHeader.style.width = cellMinWidth + 'px';
                     }
+                    tdHeader.style.width = cellMinWidth + 'px';
                     if (colHeader.width) {
                         tdHeader.style.width = colHeader.width + 'px';
                     }

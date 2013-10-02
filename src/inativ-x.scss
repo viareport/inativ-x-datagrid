@@ -7,21 +7,6 @@
     vertical-align: middle;
 }
 
-.cell-header {
-  height: 40px;
-}
-
-.column-header { // t'es utilisé toi ?
-  white-space: normal;
-  vertical-align: middle;
-  padding: 2px;
-  width: 150px;
-}
-
-.row-header.cell {
-  width: 250px;
-}
-
 x-datagrid {
     height: 100%;
     display: block;
