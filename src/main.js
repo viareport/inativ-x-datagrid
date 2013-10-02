@@ -349,9 +349,11 @@ require('inativ-x-inputfilter');
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
-                var nbColumnsDisplay = Math.floor(this.offsetWidth / this.cellMinWidth);
+                var totalMinWidth = this.header[0].reduce(function sumWidth(total, header) {
+                        return total + (header.width || this.cellMinWidth);
+                    }.bind(this), 0);
 
-                if (nbColumnsDisplay < this.header[0].length) {
+                if (totalMinWidth > this.offsetWidth) {
                     contentWrapperHeight -= this.scrollBarWidth;
                 } else {
                     this.contentWrapper.style.width = '100%';
