@@ -229,7 +229,7 @@ require('inativ-x-inputfilter');
             },
             renderContent: function renderContent(currentRowDisplay) {
                 var displayData = this.displayedData;
-                var tableContentFragment = document.createDocumentFragment();
+                var tableContentFragment = document.createElement('tbody');
                 var lastRowCreate = Math.min(displayData.length, currentRowDisplay + this._nbRowDisplay + this.cachedRow);
 
                 this.firstRowCreate = Math.max(0, currentRowDisplay - this.cachedRow);
