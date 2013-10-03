@@ -1,4 +1,4 @@
-var TestSuite = require('spatester').TestSuite;
+var TestSuite = require('spatester');
 var rootSelector = "#datagrid";
 var filterInputSelector = rootSelector + " x-inputfilter input";
 var datagrid;
@@ -47,20 +47,12 @@ var testSuite = new TestSuite("Datagrid test", {
     }
 });
 
-Testem.useCustomAdapter(function (socket) {
-    testSuite.setSocket(socket);
-});
-
 testSuite.addTest("Affichage de la grille", function (scenario, asserter) {
-    asserter.assertTrue(function () {
-        return asserter.count("th")() === 3;
-    }, "Le tableau doit contenir 3 column headers");
+    //"Le tableau doit contenir 3 column headers"
+    asserter.expect("th").to.have.nodeLength(3);
 
-    var actualContent =
-
-    asserter.assertTrue(function () {
-        return asserter.count(".x-datagrid-td")() === 9;
-    }, "Le tableau doit contenir 9 cellules de contenu");
+    // "Le tableau doit contenir 9 cellules de contenu"
+    asserter.expect(".x-datagrid-td").to.have.nodeLength(9);
 
     asserter.assertTrue(function () {
         var cell = datagrid.getCellAt(1,2);
@@ -73,9 +65,8 @@ testSuite.addTest("Application d'un filtre", function (scenario, asserter) {
         .fill(filterInputSelector, 'A1')
         .keyboard(filterInputSelector, "keyup", "Enter", 13);
 
-    asserter.assertTrue(function () {
-        return asserter.count(".x-datagrid-td")() === 3;
-    }, "Après filtre, le tableau doit contenir 3 cellules de contenu");
+    //"Après filtre, le tableau doit contenir 3 cellules de contenu"
+    asserter.expect(".x-datagrid-td").to.have.nodeLength(3);
 });
 
 testSuite.addTest("Visualisation d'erreur dans la grille", function (scenario, asserter) {
@@ -99,14 +90,15 @@ testSuite.addTest("Visualisation d'erreur dans la grille", function (scenario, a
         ];
     });
 
-    asserter.assertTrue(function () {
-        return document.querySelector(".error-message") !== null && asserter.count(".error-message")() === 1;
-    }, "Le tableau doit contenir une zone d'erreur et seulement une");
+    // "Le tableau doit contenir une zone d'erreur et seulement une"
+    asserter.expect(".error-message").to.exist();
+    asserter.expect(".error-message").to.have.nodeLength(1);
 
-    asserter.assertTrue(function () {
-        return datagrid.tableContent.querySelector("tr:nth-child(1) td:nth-child(1) span.error-message") !== null;
-    }, "La cellule de la ligne 1 et colonne 1 doit indiquer une erreur");
+    // "La cellule de la ligne 1 et colonne 1 doit indiquer une erreur"
+    asserter.expect("x-datagrid .contentWrapper tr:nth-child(1) td:nth-child(1) span.error-message").to.exist();
 });
+
+
 
 document.addEventListener('DOMComponentsLoaded', function () {
     testSuite.run();

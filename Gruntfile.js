@@ -1,4 +1,4 @@
-module.exports = function (grunt) {
+module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-compass');
@@ -7,6 +7,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-mkdir');
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-bumpup');
     grunt.loadNpmTasks('grunt-testem');
@@ -16,7 +17,7 @@ module.exports = function (grunt) {
     grunt.initConfig({
         clean: {
             build: ['dist/*.js', 'dist/*.css'],
-            test: ['test/testbuild.js', 'test/main.*', 'test/x-tag-core.js', 'testem*json'],
+            test: ['test/testbuild.js', 'test/main.*', 'test/x-tag-core.js', 'testem*json', 'test-result/*'],
             demo: ['demo/*.js', 'demo/*.css']
         },
         compass: {
@@ -32,7 +33,7 @@ module.exports = function (grunt) {
                     './node_modules/inativ-x-*/dist/*.css',
                     './dist/inativ-x.css'
                 ],
-                dest: 'build/main.css'
+                dest: 'demo/main.css'
             },
             test: {
                 src: [
@@ -44,7 +45,7 @@ module.exports = function (grunt) {
         },
         connect: {
             demo: {
-                options: {
+                options:{
                     port: 3001,
                     keepalive: true,
                     hostname: '*'
@@ -54,11 +55,11 @@ module.exports = function (grunt) {
         copy: {
             dist: {
                 files: [
-                    {src: ['src/main.js'], dest: 'dist/main.js'},
+                    {src : ['src/main.js'], dest: 'dist/main.js'},
                 ]
             }
         },
-        jshint: {
+        jshint:{
             all: ['src/main.js']
         },
         watch: {
@@ -71,12 +72,12 @@ module.exports = function (grunt) {
                 tasks: ['dev']
             },
             test: {
-                files: ['src/*.js', 'src/*.scss', 'test/test.js', 'test/TestemSuite.html'],
-                tasks: ['test']
+                files: ['src/*.js', 'src/*.scss', 'test/test.js', 'test/TestemSuite.html', 'node_modules/inativ-*/src/*.js', 'node_modules/inativ-*/src/*.scss'],
+                tasks: ['buildTest']
             },
             demo: {
                 files: ['src/*.js', 'src/*.scss', 'demo/index.html'],
-                tasks: ['watch_demo']
+                tasks: ['builddemo']
             },
             options: {
                 spawn: false
@@ -90,7 +91,7 @@ module.exports = function (grunt) {
             },
             demo: {
                 files: {
-                    'build/main.js': ['lib/x-tag-core.js', 'src/main.js']
+                    'demo/main.js': ['lib/x-tag-core.js', 'src/main.js']
                 }
             }
         },
@@ -123,6 +124,13 @@ module.exports = function (grunt) {
                     'node_modules/inativ-x-inputfilter': ['build']
                 }
             }
+        },
+        mkdir: {
+            'test-result': {
+                options: {
+                    create: ['test-result']
+                }
+            }
         }
     });
 
@@ -133,15 +141,13 @@ module.exports = function (grunt) {
         grunt.log.writeln("----------");
     });
 
-    grunt.registerTask('build', ['clean:build', 'jshint', 'compass', 'copy:dist']);
-    grunt.registerTask('build_test', ['build', 'clean:test', 'concat:test', 'browserify:test']);
-    grunt.registerTask('build_demo', ['build', 'concat:demo', 'browserify:demo']);
-    grunt.registerTask('watch_demo', ['build_demo', 'watch:demo']);
-    grunt.registerTask('demo', ['build_demo', 'launchDemo']);
-    grunt.registerTask('auto_test', ['build', 'build_test', 'testem']);
-    grunt.registerTask('test', ['build', 'build_test', 'testem']);
+    grunt.registerTask('build', ['clean:build', 'compass', 'copy:dist']);
+    grunt.registerTask('builddemo', ['build', 'clean:demo', 'concat:demo', 'browserify:demo']);
+    grunt.registerTask('demo', ['builddemo', 'launchDemo']);
+    grunt.registerTask('test', ['buildTest', 'mkdir:test-result', 'testem']);
     grunt.registerTask('dist', ['test', 'bumpup']);
+    grunt.registerTask('buildTest', ['build', 'clean:test', 'concat:test', 'browserify:test']);
 
     grunt.registerTask('dev', ['subgrunt', 'build', 'watch']);
-    grunt.registerTask('default', ['build', 'watch:build']);
+    grunt.registerTask('default', ['buildTest', 'watch:test']);
 };
