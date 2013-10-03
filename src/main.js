@@ -136,7 +136,7 @@ require('inativ-x-inputfilter');
                         this._data.content.push({
                             originIndex: i,
                             rowValue: content[i]
-                        });
+                        }); // filteredIndex viendra se rajouter (cf renderContent et applyFilter). L'initialiser à i ?
                     }
                     var event = new CustomEvent('contentUpdated');
                     this.dispatchEvent(event);
@@ -246,6 +246,7 @@ require('inativ-x-inputfilter');
                 for (; rowIndex < lastRowCreate; rowIndex++) {
                     var tr = document.createElement("tr");
                     tr.setAttribute('class', 'x-datagrid-tr');
+                    displayData[rowIndex].filteredIndex = rowIndex;
                     var columnIndex = 0;
                     for (; columnIndex < displayData[rowIndex].rowValue.length; columnIndex++) {
                         var cellData = displayData[rowIndex].rowValue[columnIndex],
@@ -374,8 +375,12 @@ require('inativ-x-inputfilter');
 
                 return data.filter(function (row) {
                     var elem = row.rowValue[columnIndex].value,
-                        filterFn = datagrid.header[0][columnIndex].filterFn || defaultFilterFunction;
-                    return filterFn(elem, regExp);
+                        filterFn = datagrid.header[0][columnIndex].filterFn || defaultFilterFunction,
+                        isIncluded = filterFn(elem, regExp);
+                    if (! isIncluded) {
+                        row.filteredIndex = -1;
+                    }
+                    return isIncluded;
                 });
             },
             simulateMultiRow: function (nbRow) {
