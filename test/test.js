@@ -6,10 +6,7 @@ var datagrid;
 var testSuite = new TestSuite("Datagrid test", {
     setUp: function () {
         datagrid = document.createElement('x-datagrid');
-        datagrid.setAttribute('id', "datagrid");
-        datagrid.setAttribute('cell-height', 20);
         datagrid.setAttribute('cell-width', 100);
-        datagrid.setAttribute('filter', false);
 
         document.querySelector('body').appendChild(datagrid);
 

@@ -68,7 +68,6 @@ require('inativ-x-inputfilter');
                 window.onresize = this.originOnResize;
             },
             attributeChanged: function attributedChanged() {
-            //TODO editable
             }
         },
         events: {
