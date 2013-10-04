@@ -18,7 +18,7 @@ module.exports = function(grunt) {
         clean: {
             build: ['dist/*.js', 'dist/*.css'],
             test: ['test/testbuild.js', 'test/main.*', 'test/x-tag-core.js', 'testem*json', 'test-result/*'],
-            demo: ['demo/*.js', 'demo/*.css']
+            demo: ['build/*.js', 'build/*.css']
         },
         compass: {
             main: {
@@ -33,7 +33,7 @@ module.exports = function(grunt) {
                     './node_modules/inativ-x-*/dist/*.css',
                     './dist/inativ-x.css'
                 ],
-                dest: 'demo/main.css'
+                dest: 'build/main.css'
             },
             test: {
                 src: [
@@ -91,7 +91,7 @@ module.exports = function(grunt) {
             },
             demo: {
                 files: {
-                    'demo/main.js': ['src/main.js']
+                    'build/main.js': ['src/main.js']
                 }
             }
         },
@@ -134,20 +134,23 @@ module.exports = function(grunt) {
         }
     });
 
+    grunt.registerTask('build', ['clean:build', 'compass', 'copy:dist']);
+    
+    grunt.registerTask('builddemo', ['build', 'clean:demo', 'concat:demo', 'browserify:demo']);
     grunt.registerTask('launchDemo', function () {
         grunt.task.run('connect');
         grunt.log.writeln("----------");
         grunt.log.writeln(">>> demo ready, please visit http://localhost:3001/demo/");
         grunt.log.writeln("----------");
     });
-
-    grunt.registerTask('build', ['clean:build', 'compass', 'copy:dist']);
-    grunt.registerTask('builddemo', ['build', 'clean:demo', 'concat:demo', 'browserify:demo']);
+    grunt.registerTask('watch_demo', ['builddemo', 'watch:demo']);
     grunt.registerTask('demo', ['builddemo', 'launchDemo']);
+
     grunt.registerTask('test', ['buildTest', 'mkdir:test-result', 'testem']);
-    grunt.registerTask('dist', ['test', 'bumpup']);
     grunt.registerTask('buildTest', ['build', 'clean:test', 'concat:test', 'browserify:test']);
 
     grunt.registerTask('dev', ['subgrunt', 'build', 'watch']);
     grunt.registerTask('default', ['buildTest', 'watch:test']);
+
+    grunt.registerTask('dist', ['test', 'bumpup']);
 };

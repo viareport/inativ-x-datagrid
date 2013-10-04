@@ -1,6 +1,7 @@
 .sass-cache/
 demo/main.js
 dist/*
+build
 node_modules/
 test/testbuild.js
 test-result/testem-ci.tap
