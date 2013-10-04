@@ -280,11 +280,6 @@ require('inativ-x-inputfilter');
                         tr.appendChild(td);
                     }
                     fragment.appendChild(tr);
-                    this.plugins.forEach(function(plugin){
-                        if (plugin.onContentRendered) {
-                            plugin.onContentRendered();
-                        }
-                    });
                 }
                 tableContentFragment.appendChild(fragment);
                 // S'il y a plus de lignes que celles que l'on affiche
@@ -296,6 +291,11 @@ require('inativ-x-inputfilter');
                 this.tableContent.innerHTML = '';
 
                 this.tableContent.appendChild(tableContentFragment);
+                this.plugins.forEach(function(plugin){
+                    if (plugin.onContentRendered) {
+                        plugin.onContentRendered();
+                    }
+                });
 
             },
             getCellTemplate: function getCellTemplate(columnIndex) {

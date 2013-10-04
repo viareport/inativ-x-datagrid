@@ -121,9 +121,14 @@ testSuite.addTest("onContentRendered est appellé sur les plugins lors d'un repa
     scenario.exec(function () {
         datagrid.content = [
             [
-                {value: "A1", errorMessage: "ceci est un message d'erreur"},
+                {value: "A1"},
                 {value: "B1"},
                 {value: "C1"}
+            ],
+            [
+                {value: "A2"},
+                {value: "B2"},
+                {value: "C2"}
             ]
         ];
 
@@ -139,6 +144,11 @@ testSuite.addTest("onContentRendered est appellé sur les plugins lors d'un repa
                 {value: "A1"},
                 {value: "B1"},
                 {value: "C1bis"}
+            ],
+            [
+                {value: "A2"},
+                {value: "B2"},
+                {value: "C2"}
             ]
         ];
     });

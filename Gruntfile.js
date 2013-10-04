@@ -86,12 +86,12 @@ module.exports = function(grunt) {
         browserify: {
             test: {
                 files: {
-                    'test/main.js': ['lib/x-tag-core.js', 'src/main.js', 'test/test.js']
+                    'test/main.js': ['src/main.js', 'test/test.js']
                 }
             },
             demo: {
                 files: {
-                    'demo/main.js': ['lib/x-tag-core.js', 'src/main.js']
+                    'demo/main.js': ['src/main.js']
                 }
             }
         },
