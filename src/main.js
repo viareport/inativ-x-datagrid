@@ -163,7 +163,7 @@ require('inativ-x-inputfilter');
 
         },
         methods: {
-            registerPlugin: function register(plugin) {
+            registerPlugin: function registerPlugin(plugin) {
                 plugin.datagrid = this;
                 plugin.append();
                 this.plugins.push(plugin);
@@ -280,6 +280,11 @@ require('inativ-x-inputfilter');
                         tr.appendChild(td);
                     }
                     fragment.appendChild(tr);
+                    this.plugins.forEach(function(plugin){
+                        if (plugin.onContentRendered) {
+                            plugin.onContentRendered();
+                        }
+                    });
                 }
                 tableContentFragment.appendChild(fragment);
                 // S'il y a plus de lignes que celles que l'on affiche
@@ -383,7 +388,7 @@ require('inativ-x-inputfilter');
                     return isIncluded;
                 });
             },
-            simulateMultiRow: function (nbRow) {
+            simulateMultiRow: function simulateMultiRow(nbRow) {
                 var tr = document.createElement("tr");
                 var td;
                 var i = 0;
@@ -399,7 +404,7 @@ require('inativ-x-inputfilter');
             },
             
             //TODO : privée ? bindCellEvts ?
-            bindCustomEvents: function (eventsTab, element) {
+            bindCustomEvents: function bindCustomEvents(eventsTab, element) {
                 var events = eventsTab;
                 var eventTypes = Object.keys(events);
                 var that = this;

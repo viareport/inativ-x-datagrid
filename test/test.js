@@ -98,7 +98,57 @@ testSuite.addTest("Visualisation d'erreur dans la grille", function (scenario, a
     asserter.expect("x-datagrid .contentWrapper tr:nth-child(1) td:nth-child(1) span.error-message").to.exist();
 });
 
+testSuite.addTest("onContentRendered est appellé sur les plugins lors d'un repaint", function (scenario, asserter) {
 
+    // Given
+
+    var plugin = {
+        onContentRenderedCalled: 0,
+        onContentRendered: function() {
+            this.onContentRenderedCalled++;
+        },
+        append: function() {
+
+        }
+    };
+
+    var pluginSansOnContentRendered = {
+        append: function() {
+
+        }
+    };
+
+    scenario.exec(function () {
+        datagrid.content = [
+            [
+                {value: "A1", errorMessage: "ceci est un message d'erreur"},
+                {value: "B1"},
+                {value: "C1"}
+            ]
+        ];
+
+        datagrid.registerPlugin(plugin);
+        datagrid.registerPlugin(pluginSansOnContentRendered);
+    });
+
+    // When
+
+    scenario.exec(function () {
+        datagrid.content = [
+            [
+                {value: "A1"},
+                {value: "B1"},
+                {value: "C1bis"}
+            ]
+        ];
+    });
+
+    // Then    
+
+    asserter.assertTrue(function() {
+        return plugin.onContentRenderedCalled === 1;
+    }, "La méthode onContentRendered du plugin doit être appellée une fois");
+});
 
 document.addEventListener('DOMComponentsLoaded', function () {
     testSuite.run();
