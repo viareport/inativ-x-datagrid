@@ -14,6 +14,7 @@ require('inativ-x-inputfilter');
     'use strict';
     /* Methods ou on a juste un wrapper (x-datagrid) autour d'une table */
     /* Les perfs sont meilleurs qu'avec l'autre technique, mais il faudrait quand même utiliser la technique de w2ui */
+
     function escapeRegExp(string) {
         return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     }
@@ -347,7 +348,14 @@ require('inativ-x-inputfilter');
             },
             calculateContentSize: function calculateContentSize() {
                 var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
+                var grids = document.querySelectorAll('x-datagrid');
+
+                //Fix me parfois on a les propriétés offset vide
+                if (this === grids[0] && contentWrapperHeight <= 0) {
+                    contentWrapperHeight = grid.offsetHeight - grid.columnHeaderWrapper.offsetHeight;
+                }
                 if (contentWrapperHeight <= 0) {
+                    console.log('Offset height : '+ this.offsetHeight+ ' Column header wrapper : ' + this.columnHeaderWrapper.offsetHeight);
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
@@ -360,7 +368,7 @@ require('inativ-x-inputfilter');
                 } else {
                     this.contentWrapper.style.width = '100%';
                 }
-                this.contentWrapper.style.height = contentWrapperHeight + 'px';
+                this.contentWrapper.style.maxHeight = contentWrapperHeight + 'px';
                 this.contentWrapper.style.minWidth = this.tableMinWidth + 'px';
 
                 this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
@@ -394,6 +402,9 @@ require('inativ-x-inputfilter');
                 var i = 0;
                 for(;i<this.header[0].length;i++) {
                     td = document.createElement("td");
+                    if (this.header[0][i].columnClass) {
+                        td.classList.add(this.header[0][i].columnClass);
+                    }
                     if(this.header[0][i].width) {
                         td.style.width = this.header[0][i].width + "px";
                     }
