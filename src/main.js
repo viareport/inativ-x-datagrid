@@ -49,6 +49,7 @@ require('inativ-x-inputfilter');
                 this.tableMinWidth = 0;
                 this.plugins = [];
                 this.firstRowCreate = null;
+                this._nbRowDisplay = 0;
 
                 this.cellMinWidth = Number(this.getAttribute('cell-width') || 150);
                 
@@ -159,6 +160,11 @@ require('inativ-x-inputfilter');
                     }
 
                     return this._displayedData;
+                }
+            },
+            lastRowDisplay: {
+                get: function() {
+                    return this.lastCurrentRow + this._nbRowDisplay;
                 }
             }
 
@@ -369,7 +375,7 @@ require('inativ-x-inputfilter');
                 } else {
                     this.contentWrapper.style.width = '100%';
                 }
-                this.contentWrapper.style.maxHeight = contentWrapperHeight + 'px';
+                this.contentWrapper.style.height = contentWrapperHeight + 'px';
                 this.contentWrapper.style.minWidth = this.tableMinWidth + 'px';
 
                 this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
