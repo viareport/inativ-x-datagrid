@@ -96,13 +96,13 @@ require('inativ-x-inputfilter');
                 }
             },
             filter: function (e) {
-                this._displayedData = null;
                 this.lastCurrentRow = 0;
                 if (e.detail.filterValue === undefined || e.detail.filterValue === "") {
                     delete this._filters[e.detail.filterType];
                 } else {
                     this._filters[e.detail.filterType] = e.detail.filterValue;
                 }
+                this._displayedData = null;
                 this.contentWrapper.scrollTop = 0;
                 this.renderContent(0);
             }
@@ -262,6 +262,7 @@ require('inativ-x-inputfilter');
                         }
                         td.cellValue = cellData.value;
                         td.cellRow = displayData[rowIndex].originIndex;
+                        td.rowIndex = rowIndex;
                         if (cellData.cellClass) {
                             td.className = ' ' + cellData.cellClass;
                         }
@@ -348,8 +349,14 @@ require('inativ-x-inputfilter');
             },
             calculateContentSize: function calculateContentSize() {
                 var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
+                var grids = document.querySelectorAll('x-datagrid');
 
+                //Fix me parfois on a les propriétés offset vide
+                if (this === grids[0] && contentWrapperHeight <= 0) {
+                    contentWrapperHeight = grid.offsetHeight - grid.columnHeaderWrapper.offsetHeight;
+                }
                 if (contentWrapperHeight <= 0) {
+                    console.log('Offset height : '+ this.offsetHeight+ ' Column header wrapper : ' + this.columnHeaderWrapper.offsetHeight);
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
