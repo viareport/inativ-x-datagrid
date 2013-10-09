@@ -348,14 +348,8 @@ require('inativ-x-inputfilter');
             },
             calculateContentSize: function calculateContentSize() {
                 var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
-                var grids = document.querySelectorAll('x-datagrid');
 
-                //Fix me parfois on a les propriétés offset vide
-                if (this === grids[0] && contentWrapperHeight <= 0) {
-                    contentWrapperHeight = grid.offsetHeight - grid.columnHeaderWrapper.offsetHeight;
-                }
                 if (contentWrapperHeight <= 0) {
-                    console.log('Offset height : '+ this.offsetHeight+ ' Column header wrapper : ' + this.columnHeaderWrapper.offsetHeight);
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
