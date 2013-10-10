@@ -44,12 +44,13 @@ require('inativ-x-inputfilter');
                 this.appendChild(this.contentWrapper);
                 this._scrollTop = 0;
                 this._filters = [];
-                this.lastCurrentRow = 0;
                 this.scrollBarWidth = getScrollBarWidth();
                 this.tableMinWidth = 0;
                 this.plugins = [];
                 this.firstRowCreate = null;
                 this._nbRowDisplay = 0;
+                this._indexFirstRowDisplay = 0;
+                this._indexLastRowDisplay = 0;
 
                 this.cellMinWidth = Number(this.getAttribute('cell-width') || 150);
                 
@@ -76,7 +77,7 @@ require('inativ-x-inputfilter');
         events: {
             contentUpdated: function contentUpdated() {
                 this._displayedData = null;
-                this.renderContent(this.lastCurrentRow);
+                this.renderContent(this._indexFirstRowDisplay);
             },
             headerUpdated: function headerUpdated() {
                 this.calculateMinimumWidth(this.cellMinWidth);
@@ -89,15 +90,15 @@ require('inativ-x-inputfilter');
                     //this._scrollTop = Number(e.target.scrollTop);
                     var currentRow = this.calculateCurrentLine(Number(e.target.scrollTop));
 
-                    var diffBetweenLastCurrentRow = Math.abs(currentRow - this.lastCurrentRow);
+                    var diffBetweenLastCurrentRow = Math.abs(currentRow - this._indexFirstRowDisplay);
                     if (diffBetweenLastCurrentRow > this._nbRowDisplay) {
-                        this.lastCurrentRow = currentRow;
+                        this._indexFirstRowDisplay = currentRow;
                         this.renderContent(currentRow);
                     }
                 }
             },
             filter: function (e) {
-                this.lastCurrentRow = 0;
+                this._indexFirstRowDisplay = 0;
                 if (e.detail.filterValue === undefined || e.detail.filterValue === "") {
                     delete this._filters[e.detail.filterType];
                 } else {
@@ -164,7 +165,12 @@ require('inativ-x-inputfilter');
             },
             lastRowDisplay: {
                 get: function() {
-                    return this.lastCurrentRow + this._nbRowDisplay;
+                    return this._indexLastRowDisplay;
+                }
+            },
+            firstRowDisplay: {
+                get: function () {
+                    return this._indexFirstRowDisplay;
                 }
             }
 
@@ -237,6 +243,7 @@ require('inativ-x-inputfilter');
             renderContent: function renderContent(currentRowDisplay) {
                 var displayData = this.displayedData;
                 var tableContentFragment = document.createElement('tbody');
+                this._indexLastRowDisplay = Math.min(displayData.length, currentRowDisplay + this._nbRowDisplay);
                 var lastRowCreate = Math.min(displayData.length, currentRowDisplay + this._nbRowDisplay + this.cachedRow);
 
                 this.firstRowCreate = Math.max(0, currentRowDisplay - this.cachedRow);
