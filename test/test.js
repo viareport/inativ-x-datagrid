@@ -21,24 +21,21 @@ var testSuite = new TestSuite("Datagrid test", {
                     {value: 'column3'}
                 ]
             ],
-            content: [
-                [
-                    {value: "A1"},
-                    {value: "B1"},
-                    {value: "C1"}
-                ],
-                [
-                    {value: "A2"},
-                    {value: "B2"},
-                    {value: "C2"}
-                ],
-                [
-                    {value: "A3"},
-                    {value: "B3"},
-                    {value: "C3"}
-                ]
-            ]
+            content: [],
         };
+
+        var _content = [];
+
+        for(var i =1; i<=3000; i++) {
+            _content.push([
+                {value: "A"+i},
+                {value: "B"+i},
+                {value: "C"+i},
+            ]);
+        }
+
+        datagrid.content = _content;
+
     },
 
     tearDown: function () {
@@ -51,9 +48,6 @@ testSuite.addTest("Affichage de la grille", function (scenario, asserter) {
     //"Le tableau doit contenir 3 column headers"
     asserter.expect("th").to.have.nodeLength(3);
 
-    // "Le tableau doit contenir 9 cellules de contenu"
-    asserter.expect(".x-datagrid-td").to.have.nodeLength(9);
-
     asserter.assertTrue(function () {
         var cell = datagrid.getCellAt(1,2);
         return cell.textContent === "B3";
@@ -62,7 +56,7 @@ testSuite.addTest("Affichage de la grille", function (scenario, asserter) {
 
 testSuite.addTest("Application d'un filtre", function (scenario, asserter) {
     scenario
-        .fill(filterInputSelector, 'A1')
+        .fill(filterInputSelector, 'A3000')
         .keyboard(filterInputSelector, "keyup", "Enter", 13);
 
     //"Après filtre, le tableau doit contenir 3 cellules de contenu"
@@ -158,6 +152,47 @@ testSuite.addTest("onContentRendered est appellé sur les plugins lors d'un repa
     asserter.assertTrue(function() {
         return plugin.onContentRenderedCalled === 1;
     }, "La méthode onContentRendered du plugin doit être appellée une fois");
+});
+
+testSuite.addTest("makeCellVisible rend la cellule visible", function (scenario, asserter) {
+
+    // Given
+    asserter.expect(".contentWrapper").not.to.have.html("C1499");
+
+    // When
+    scenario.exec(function() {
+        datagrid.makeCellVisible(1500, 2);
+    });
+
+    // Then
+
+    scenario.wait(function() {
+        return (/C1499/).test(document.querySelector(".contentWrapper").innerHTML);
+    });
+
+    asserter.expect(".contentWrapper").to.have.html("C1499");
+});
+
+testSuite.addTest("makeCellVisible rend la cellule visible même lorsque l'on est au milieu du tableau", function (scenario, asserter) {
+
+    // Given
+    scenario.exec(function() {
+        datagrid.makeCellVisible(1500, 2);
+    });
+    scenario.wait(function() {
+        return (/C1499/).test(document.querySelector(".contentWrapper").innerHTML);
+    });
+
+    // When
+    scenario.exec(function() {
+        datagrid.makeCellVisible(30, 2);
+    });
+
+    // Then
+    scenario.wait(function() {
+        return (/C29/).test(document.querySelector(".contentWrapper").innerHTML);
+    });
+    asserter.expect(".contentWrapper").to.have.html("C29");
 });
 
 document.addEventListener('DOMComponentsLoaded', function () {

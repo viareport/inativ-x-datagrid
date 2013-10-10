@@ -316,18 +316,6 @@ require('inativ-x-inputfilter');
             getCellTemplate: function getCellTemplate(columnIndex) {
                 return this.header[0][columnIndex].cellTemplate || defaultTemplate;
             },
-            sort: function sortData(columnIndex) {
-                if (!columnIndex) {
-                    throw new Error('a pas le column index pour sorter la data');
-                }
-                var displayData = new Object(this._data);
-                var sortedData = displayData.slice(0);
-                sortedData.sort(function (a, b) {
-                    return a[columnIndex] - b[columnIndex];
-                });
-                displayData = sortedData;
-                return displayData;
-            },
             calculateHeaderWidth: function calculateHeaderWidth(nbSource) {
                 this.columnHeaderWrapper.style.width = "100%";
                 if (nbSource > this._nbRowDisplay) {
@@ -366,10 +354,9 @@ require('inativ-x-inputfilter');
 
                 //Fix me parfois on a les propriétés offset vide
                 if (this === grids[0] && contentWrapperHeight <= 0) {
-                    contentWrapperHeight = grid.offsetHeight - grid.columnHeaderWrapper.offsetHeight;
+                    contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
                 }
                 if (contentWrapperHeight <= 0) {
-                    console.log('Offset height : '+ this.offsetHeight+ ' Column header wrapper : ' + this.columnHeaderWrapper.offsetHeight);
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
@@ -447,7 +434,6 @@ require('inativ-x-inputfilter');
                         data[key] = events[eventName].data[key];
                     }
 
-
                     var customEvent = new CustomEvent(customEventName, {'detail': data, 'bubbles': true});
 
                     element.addEventListener(eventName, function () {
@@ -460,9 +446,34 @@ require('inativ-x-inputfilter');
             },
             getCellAt: function getCellAt(xCoord, yCoord) {
                 return this.contentWrapper.querySelector("table tr:nth-child("+(yCoord-this.firstRowCreate+1)+") td:nth-child(" + (xCoord+1) + ")");
+            },
+            makeCellVisible: function makeCellVisible(rowIndex, columnIndex) {
+
+                var wrapper = document.querySelector(".contentWrapper");
+
+                var cellCoords = getCellCoords.call(this,rowIndex, columnIndex);
+
+                if(cellCoords.y-cellCoords.height < wrapper.scrollTop) {
+                    wrapper.scrollTop = cellCoords.y - cellCoords.height;
+                } else if(cellCoords.bottom()+cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
+                    wrapper.scrollTop = cellCoords.y - wrapper.offsetHeight + 2*cellCoords.height;
+                }
             }
         }
     });
+
+    function  getCellCoords(rowIndex, columnIndex) {
+        var sameColumnCell = this.getCellAt(columnIndex, this.firstRowCreate+1);
+        return {
+            x: sameColumnCell.offsetLeft,
+            y: ((rowIndex - sameColumnCell.rowIndex) * sameColumnCell.offsetHeight) + sameColumnCell.offsetTop,
+            width: sameColumnCell.offsetWidth,
+            height: sameColumnCell.offsetHeight,
+            bottom: function() {
+                return this.y+this.height;
+            }
+        };
+    }
 
     //Recuperation de la taille de la scrollbar selon le navigateur
     function getScrollBarWidth() {
