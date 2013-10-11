@@ -454,9 +454,15 @@ require('inativ-x-inputfilter');
                 var cellCoords = getCellCoords.call(this,rowIndex, columnIndex);
 
                 if(cellCoords.y-cellCoords.height < wrapper.scrollTop) {
-                    wrapper.scrollTop = cellCoords.y - cellCoords.height;
-                } else if(cellCoords.bottom()+cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
-                    wrapper.scrollTop = cellCoords.y - wrapper.offsetHeight + 2*cellCoords.height;
+                    wrapper.scrollTop = cellCoords.y;
+                } else if(cellCoords.y+2*cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
+                    wrapper.scrollTop = cellCoords.y - wrapper.offsetHeight + cellCoords.height;
+                }
+
+                if(cellCoords.x < wrapper.scrollLeft) {
+                    wrapper.scrollLeft = cellCoords.x;
+                } else if(cellCoords.x+cellCoords.width > wrapper.scrollLeft + wrapper.offsetWidth) {
+                    wrapper.scrollLeft = cellCoords.x - wrapper.offsetWidth + cellCoords.width;
                 }
             }
         }
@@ -469,9 +475,6 @@ require('inativ-x-inputfilter');
             y: ((rowIndex - sameColumnCell.rowIndex) * sameColumnCell.offsetHeight) + sameColumnCell.offsetTop,
             width: sameColumnCell.offsetWidth,
             height: sameColumnCell.offsetHeight,
-            bottom: function() {
-                return this.y+this.height;
-            }
         };
     }
 
