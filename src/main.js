@@ -449,7 +449,7 @@ require('inativ-x-inputfilter');
             },
             makeCellVisible: function makeCellVisible(rowIndex, columnIndex) {
 
-                var wrapper = document.querySelector(".contentWrapper");
+                var wrapper = this.contentWrapper;
 
                 var cellCoords = getCellCoords.call(this,rowIndex, columnIndex);
 
@@ -459,10 +459,10 @@ require('inativ-x-inputfilter');
                     wrapper.scrollTop = cellCoords.y - wrapper.offsetHeight + cellCoords.height;
                 }
 
-                if(cellCoords.x < wrapper.scrollLeft) {
-                    wrapper.scrollLeft = cellCoords.x;
-                } else if(cellCoords.x+cellCoords.width > wrapper.scrollLeft + wrapper.offsetWidth) {
-                    wrapper.scrollLeft = cellCoords.x - wrapper.offsetWidth + cellCoords.width;
+                if(cellCoords.x < this.scrollLeft) {
+                    this.scrollLeft = cellCoords.x;
+                } else if(cellCoords.x+cellCoords.width > this.scrollLeft + this.offsetWidth) {
+                    this.scrollLeft = cellCoords.x - this.offsetWidth + cellCoords.width;
                 }
             }
         }
