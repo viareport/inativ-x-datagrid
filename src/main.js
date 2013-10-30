@@ -234,6 +234,11 @@ require('inativ-x-inputfilter');
                             filter.setAttribute('defaultFilter', colHeader.defaultFilter);
                             this._filters[coldIdx] = colHeader.defaultFilter;
                         }
+                        // Restore filter is exist
+                        if (this._filters[coldIdx]) {
+                            filter._input.value = this._filters[coldIdx];
+                        }
+
                         filter.setAttribute('filterType', coldIdx);
                         tdHeader.appendChild(filter);
                     }
@@ -451,7 +456,7 @@ require('inativ-x-inputfilter');
 
                 var wrapper = this.contentWrapper;
 
-                var cellCoords = getCellCoords.call(this,rowIndex, columnIndex);
+                var cellCoords = this.getCellCoords(rowIndex, columnIndex);
 
                 if(cellCoords.y-cellCoords.height < wrapper.scrollTop) {
                     wrapper.scrollTop = cellCoords.y;
@@ -464,19 +469,18 @@ require('inativ-x-inputfilter');
                 } else if(cellCoords.x+cellCoords.width > this.scrollLeft + this.offsetWidth) {
                     this.scrollLeft = cellCoords.x - this.offsetWidth + cellCoords.width;
                 }
+            },
+            getCellCoords: function(rowIndex, columnIndex) {
+                var sameColumnCell = this.getCellAt(columnIndex, this.firstRowCreate+1);
+                return {
+                    x: sameColumnCell.offsetLeft,
+                    y: ((rowIndex - sameColumnCell.rowIndex) * sameColumnCell.offsetHeight) + sameColumnCell.offsetTop,
+                    width: sameColumnCell.offsetWidth,
+                    height: sameColumnCell.offsetHeight
+                };
             }
         }
     });
-
-    function  getCellCoords(rowIndex, columnIndex) {
-        var sameColumnCell = this.getCellAt(columnIndex, this.firstRowCreate+1);
-        return {
-            x: sameColumnCell.offsetLeft,
-            y: ((rowIndex - sameColumnCell.rowIndex) * sameColumnCell.offsetHeight) + sameColumnCell.offsetTop,
-            width: sameColumnCell.offsetWidth,
-            height: sameColumnCell.offsetHeight,
-        };
-    }
 
     //Recuperation de la taille de la scrollbar selon le navigateur
     function getScrollBarWidth() {
