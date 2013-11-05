@@ -462,27 +462,32 @@ require('inativ-x-inputfilter');
                 var wrapper = this.contentWrapper;
 
                 var cellCoords = this.getCellCoords(rowIndex, columnIndex);
+                if(cellCoords) {
+                    if (cellCoords.y - cellCoords.height < wrapper.scrollTop) {
+                        wrapper.scrollTop = cellCoords.y;
+                    } else if (cellCoords.y + 2 * cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
+                        wrapper.scrollTop = cellCoords.y - wrapper.offsetHeight + cellCoords.height;
+                    }
 
-                if (cellCoords.y - cellCoords.height < wrapper.scrollTop) {
-                    wrapper.scrollTop = cellCoords.y;
-                } else if (cellCoords.y + 2 * cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
-                    wrapper.scrollTop = cellCoords.y - wrapper.offsetHeight + cellCoords.height;
-                }
-
-                if (cellCoords.x < this.scrollLeft) {
-                    this.scrollLeft = cellCoords.x;
-                } else if (cellCoords.x + cellCoords.width > this.scrollLeft + this.offsetWidth) {
-                    this.scrollLeft = cellCoords.x - this.offsetWidth + cellCoords.width;
+                    if (cellCoords.x < this.scrollLeft) {
+                        this.scrollLeft = cellCoords.x;
+                    } else if (cellCoords.x + cellCoords.width > this.scrollLeft + this.offsetWidth) {
+                        this.scrollLeft = cellCoords.x - this.offsetWidth + cellCoords.width;
+                    }
                 }
             },
             getCellCoords: function (rowIndex, columnIndex) {
                 var sameColumnCell = this.getCellAt(columnIndex, this.firstRowCreate + 1);
-                return {
-                    x: sameColumnCell.offsetLeft,
-                    y: ((rowIndex - sameColumnCell.rowIndex) * sameColumnCell.offsetHeight) + sameColumnCell.offsetTop,
-                    width: sameColumnCell.offsetWidth,
-                    height: sameColumnCell.offsetHeight
-                };
+                if(sameColumnCell) {
+                    return {
+                        x: sameColumnCell.offsetLeft,
+                        y: ((rowIndex - sameColumnCell.rowIndex) * sameColumnCell.offsetHeight) + sameColumnCell.offsetTop,
+                        width: sameColumnCell.offsetWidth,
+                        height: sameColumnCell.offsetHeight
+                    };
+                } else {
+                    return null;
+                }
             }
         }
     });

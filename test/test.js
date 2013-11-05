@@ -195,6 +195,31 @@ testSuite.addTest("makeCellVisible rend la cellule visible même lorsque l'on es
     asserter.expect(".contentWrapper").to.have.html("C29");
 });
 
+testSuite.addTest("makeCellVisible fonctionne lorsqu'il n'y a qu'une ligne dans le tableau", function (scenario, asserter) {
+
+    // Given
+    scenario.exec(function() {
+        datagrid.content = [
+            [
+                {value: "A1499"},
+                {value: "B1499"},
+                {value: "C1499"}
+            ]
+        ];
+    });
+    scenario.wait(function() {
+        return (/C1499/).test(document.querySelector(".contentWrapper").innerHTML);
+    });
+
+    // When
+    scenario.exec(function() {
+        datagrid.makeCellVisible(0,0);
+    });
+
+    // Then
+    asserter.expect(".contentWrapper").to.have.html("C1499");
+});
+
 document.addEventListener('DOMComponentsLoaded', function () {
     testSuite.run();
 });
