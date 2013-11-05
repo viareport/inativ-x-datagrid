@@ -463,7 +463,7 @@ require('inativ-x-inputfilter');
 
                 var cellCoords = this.getCellCoords(rowIndex, columnIndex);
                 if(cellCoords) {
-                    if (cellCoords.y - cellCoords.height < wrapper.scrollTop) {
+                    if (cellCoords.y < wrapper.scrollTop) {
                         wrapper.scrollTop = cellCoords.y;
                     } else if (cellCoords.y + 2 * cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
                         wrapper.scrollTop = cellCoords.y - wrapper.offsetHeight + cellCoords.height;
