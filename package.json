@@ -15,8 +15,7 @@
     "grunt": "~0.4.0",
     "spatester": "1.x.x",
     "grunt-subgrunt": "~0.2.2",
-    "grunt-mkdir": "~0.1.1",
-    "inativ-gruntfile": "~0.0.0"
+    "inativ-gruntfile": "~0.0"
   },
   "engines": {
     "node": "~0.10.18"

@@ -48,7 +48,8 @@ require('inativ-x-inputfilter');
                 this.tableMinWidth = 0;
                 this.plugins = [];
                 this.firstRowCreate = null;
-                this._nbRowDisplay = 0;
+                this._nbRowDisplay = Number(this.getAttribute('nb-row-display')) || 0;
+
                 this._indexFirstRowDisplay = 0;
                 this._indexLastRowDisplay = 0;
 
@@ -57,12 +58,13 @@ require('inativ-x-inputfilter');
             },
             inserted: function inserted() {
                 var grid = this;
-                this.originOnResize = window.onresize || function(){};
+                this.originOnResize = window.onresize || function () {
+                };
                 window.onresize = function () {
                     grid.originOnResize();
                     grid.calculateContentSize();
                     grid.calculateHeaderWidth(grid.displayedData.length);
-                    grid.plugins.forEach(function(plugin){
+                    grid.plugins.forEach(function (plugin) {
                         plugin.onResize();
                     });
                 };
@@ -70,8 +72,15 @@ require('inativ-x-inputfilter');
             removed: function removed() {
                 window.onresize = this.originOnResize;
             },
-            attributeChanged: function attributedChanged() {
-            //TODO editable
+            attributeChanged: function attributedChanged(attribute) {
+                switch (attribute) {
+                    case "nb-row-display":
+                        this._nbRowDisplay = Number(this.getAttribute('nb-row-display') || 0);
+                        break;
+                    case "cell-width":
+                        this.cellMinWidth = Number(this.getAttribute('cell-width') || 150);
+                        break;
+                }
             }
         },
         events: {
@@ -164,7 +173,7 @@ require('inativ-x-inputfilter');
                 }
             },
             lastRowDisplay: {
-                get: function() {
+                get: function () {
                     return this._indexLastRowDisplay;
                 }
             },
@@ -210,7 +219,7 @@ require('inativ-x-inputfilter');
             renderHeader: function renderHeader(colHeader, coldIdx) {
                 var tdHeader = document.createElement("th");
                 if (colHeader.class) {
-                    colHeader.class.forEach(function(elem){
+                    colHeader.class.forEach(function (elem) {
                         tdHeader.classList.add(elem);
                     });
                 }
@@ -291,8 +300,8 @@ require('inativ-x-inputfilter');
                             this.bindCustomEvents(cellData.events, td);
                         }
                         td.innerHTML = '';
-                        if(cellData.errorMessage){         // c'est pas beau mais impossible de passer par le dataset pour un tooltip css (pas de polyfill pour IE)
-                            td.innerHTML += '<span class="error-message">'+cellData.errorMessage+'</span>';
+                        if (cellData.errorMessage) {         // c'est pas beau mais impossible de passer par le dataset pour un tooltip css (pas de polyfill pour IE)
+                            td.innerHTML += '<span class="error-message">' + cellData.errorMessage + '</span>';
                         }
                         //TODO : class pourrait etre un tableau
                         var cellClass = (cellData.class && cellData.class.join(' ')) || '';
@@ -311,7 +320,7 @@ require('inativ-x-inputfilter');
                 this.tableContent.innerHTML = '';
 
                 this.tableContent.appendChild(tableContentFragment);
-                this.plugins.forEach(function(plugin){
+                this.plugins.forEach(function (plugin) {
                     if (plugin.onContentRendered) {
                         plugin.onContentRendered();
                     }
@@ -333,6 +342,7 @@ require('inativ-x-inputfilter');
             calculateMinimumWidth: function calculateMinimumWidth(cellMinWidth) {
                 this.tableMinWidth = 0;
                 var table = document.createElement("table");
+                table.style.width="auto";
                 var trHeader = document.createElement("tr");
                 var ths = [];
                 for (var i = 0; i < this.header[0].length; i++) {
@@ -355,29 +365,24 @@ require('inativ-x-inputfilter');
             },
             calculateContentSize: function calculateContentSize() {
                 var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
-                var grids = document.querySelectorAll('x-datagrid');
+                this._nbRowDisplay = this._nbRowDisplay || calculateNbRowDisplay(contentWrapperHeight, this.rowHeight);
+                contentWrapperHeight = (this._nbRowDisplay * this.rowHeight + 1);
 
-                //Fix me parfois on a les propriétés offset vide
-                if (this === grids[0] && contentWrapperHeight <= 0) {
-                    contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
-                }
                 if (contentWrapperHeight <= 0) {
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
                 var totalMinWidth = this.header[0].reduce(function sumWidth(total, header) {
-                        return total + (header.width || this.cellMinWidth);
-                    }.bind(this), 0);
-
+                    return total + (header.width || this.cellMinWidth);
+                }.bind(this), 0);
                 if (totalMinWidth > this.offsetWidth) {
                     contentWrapperHeight -= this.scrollBarWidth;
                 } else {
                     this.contentWrapper.style.width = '100%';
                 }
-                this.contentWrapper.style.height = contentWrapperHeight + 'px';
-                this.contentWrapper.style.minWidth = this.tableMinWidth + 'px';
 
-                this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
+                this.contentWrapper.style.maxHeight = contentWrapperHeight + 'px';
+                this.contentWrapper.style.minWidth = this.tableMinWidth + 'px';
                 this.cachedRow = this._nbRowDisplay * 2;
             },
             calculateCurrentLine: function getDisplayFirstLine(scrollTop) {
@@ -396,7 +401,7 @@ require('inativ-x-inputfilter');
                     var elem = row.rowValue[columnIndex].value,
                         filterFn = datagrid.header[0][columnIndex].filterFn || defaultFilterFunction,
                         isIncluded = filterFn(elem, regExp);
-                    if (! isIncluded) {
+                    if (!isIncluded) {
                         row.filteredIndex = -1;
                     }
                     return isIncluded;
@@ -406,12 +411,12 @@ require('inativ-x-inputfilter');
                 var tr = document.createElement("tr");
                 var td;
                 var i = 0;
-                for(;i<this.header[0].length;i++) {
+                for (; i < this.header[0].length; i++) {
                     td = document.createElement("td");
                     if (this.header[0][i].columnClass) {
                         td.classList.add(this.header[0][i].columnClass);
                     }
-                    if(this.header[0][i].width) {
+                    if (this.header[0][i].width) {
                         td.style.width = this.header[0][i].width + "px";
                     }
                     tr.appendChild(td);
@@ -435,7 +440,7 @@ require('inativ-x-inputfilter');
 
                     //TODO data.cell ?
                     var data = {'element': element};
-                    for(var key in events[eventName].data) {
+                    for (var key in events[eventName].data) {
                         data[key] = events[eventName].data[key];
                     }
 
@@ -450,7 +455,7 @@ require('inativ-x-inputfilter');
                 return this.columnHeaderWrapper.querySelector("tr:nth-child(1) th:nth-child(" + colIndex + ")");
             },
             getCellAt: function getCellAt(xCoord, yCoord) {
-                return this.contentWrapper.querySelector("table tr:nth-child("+(yCoord-this.firstRowCreate+1)+") td:nth-child(" + (xCoord+1) + ")");
+                return this.contentWrapper.querySelector("table tr:nth-child(" + (yCoord - this.firstRowCreate + 1) + ") td:nth-child(" + (xCoord + 1) + ")");
             },
             makeCellVisible: function makeCellVisible(rowIndex, columnIndex) {
 
@@ -458,20 +463,20 @@ require('inativ-x-inputfilter');
 
                 var cellCoords = this.getCellCoords(rowIndex, columnIndex);
 
-                if(cellCoords.y-cellCoords.height < wrapper.scrollTop) {
+                if (cellCoords.y - cellCoords.height < wrapper.scrollTop) {
                     wrapper.scrollTop = cellCoords.y;
-                } else if(cellCoords.y+2*cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
+                } else if (cellCoords.y + 2 * cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
                     wrapper.scrollTop = cellCoords.y - wrapper.offsetHeight + cellCoords.height;
                 }
 
-                if(cellCoords.x < this.scrollLeft) {
+                if (cellCoords.x < this.scrollLeft) {
                     this.scrollLeft = cellCoords.x;
-                } else if(cellCoords.x+cellCoords.width > this.scrollLeft + this.offsetWidth) {
+                } else if (cellCoords.x + cellCoords.width > this.scrollLeft + this.offsetWidth) {
                     this.scrollLeft = cellCoords.x - this.offsetWidth + cellCoords.width;
                 }
             },
-            getCellCoords: function(rowIndex, columnIndex) {
-                var sameColumnCell = this.getCellAt(columnIndex, this.firstRowCreate+1);
+            getCellCoords: function (rowIndex, columnIndex) {
+                var sameColumnCell = this.getCellAt(columnIndex, this.firstRowCreate + 1);
                 return {
                     x: sameColumnCell.offsetLeft,
                     y: ((rowIndex - sameColumnCell.rowIndex) * sameColumnCell.offsetHeight) + sameColumnCell.offsetTop,
@@ -481,6 +486,10 @@ require('inativ-x-inputfilter');
             }
         }
     });
+
+    function calculateNbRowDisplay(contentWrapperHeight, rowHeight) {
+        return Math.floor(contentWrapperHeight / rowHeight);
+    }
 
     //Recuperation de la taille de la scrollbar selon le navigateur
     function getScrollBarWidth() {
@@ -522,7 +531,7 @@ require('inativ-x-inputfilter');
         document.body.appendChild(table);
         var trOffsetHeight = tr.offsetHeight;
         document.body.removeChild(table);
-        if(trOffsetHeight === 0) {
+        if (trOffsetHeight === 0) {
             throw new Error('Erreur lors du calcul de la hauteur disponible pour une ligne');
         }
         return trOffsetHeight;
@@ -538,10 +547,10 @@ function Cell(obj) {
     this.cellClass = obj.cellClass || "";
     this.errorMessage = obj.errorMessage || "";
     this.events = obj.events || null;
-    if(obj.class && !Array.isArray(obj.class)) {
+    if (obj.class && !Array.isArray(obj.class)) {
         throw new Error('class on cell is an array');
     }
-    this.rowspan = obj.rowspan || 0;
+    this.rowspan = obj.rowspan || 0;
     this.colspan = obj.colspan || 0;
     this.class = obj.class || [];
     this.rowIndex = obj.rowIndex || null; //TODO A utiiser en remplacement du td.cellRow
