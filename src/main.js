@@ -53,7 +53,7 @@ require('inativ-x-inputfilter');
                 this._indexLastRowDisplay = 0;
 
                 this.cellMinWidth = Number(this.getAttribute('cell-width') || 150);
-                
+
             },
             inserted: function inserted() {
                 var grid = this;
@@ -419,7 +419,7 @@ require('inativ-x-inputfilter');
                 tr.style.height = (nbRow * this.rowHeight) + 'px';
                 return tr;
             },
-            
+
             //TODO : privée ? bindCellEvts ?
             bindCustomEvents: function bindCustomEvents(eventsTab, element) {
                 var events = eventsTab;
@@ -428,11 +428,11 @@ require('inativ-x-inputfilter');
                 eventTypes.forEach(function (eventType) {
                     var eventName = eventType;
                     var customEventName = events[eventName].event;
-                    
+
                     if (events[eventName].data.hasOwnProperty('element')) {
                         throw new Error('Reserved data property name "element"');
                     }
-                    
+
                     //TODO data.cell ?
                     var data = {'element': element};
                     for(var key in events[eventName].data) {
