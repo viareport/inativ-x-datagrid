@@ -48,7 +48,7 @@ require('inativ-x-inputfilter');
                 this.tableMinWidth = 0;
                 this.plugins = [];
                 this.firstRowCreate = null;
-                this._nbRowDisplay = Number(this.getAttribute('nb-row-display')) || 0;
+                this.nbRowDisplay = null;
 
                 this._indexFirstRowDisplay = 0;
                 this._indexLastRowDisplay = 0;
@@ -74,9 +74,6 @@ require('inativ-x-inputfilter');
             },
             attributeChanged: function attributedChanged(attribute) {
                 switch (attribute) {
-                    case "nb-row-display":
-                        this._nbRowDisplay = Number(this.getAttribute('nb-row-display') || 0);
-                        break;
                     case "cell-width":
                         this.cellMinWidth = Number(this.getAttribute('cell-width') || 150);
                         break;
@@ -100,7 +97,7 @@ require('inativ-x-inputfilter');
                     var currentRow = this.calculateCurrentLine(Number(e.target.scrollTop));
 
                     var diffBetweenLastCurrentRow = Math.abs(currentRow - this._indexFirstRowDisplay);
-                    if (diffBetweenLastCurrentRow > this._nbRowDisplay) {
+                    if (diffBetweenLastCurrentRow > this.nbRowDisplay) {
                         this._indexFirstRowDisplay = currentRow;
                         this.renderContent(currentRow);
                     }
@@ -156,6 +153,20 @@ require('inativ-x-inputfilter');
                 get: function () {
                     throw new Error("No getter available on datagrid content");
                 }
+            },
+            nbRowDisplay: {
+                get: function() {
+                    var nbRowDisplay = 0;
+                    var attribute = Number(this.getAttribute('nb-row-display'));
+                    if(attribute) {
+                        nbRowDisplay = attribute;
+                    } else {
+                        var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
+                        nbRowDisplay = calculateNbRowDisplay(contentWrapperHeight, this.rowHeight);
+                    }
+                    return nbRowDisplay;
+                },
+                set: function() {}
             },
             displayedData: {
                 get: function () {
@@ -257,8 +268,8 @@ require('inativ-x-inputfilter');
             renderContent: function renderContent(currentRowDisplay) {
                 var displayData = this.displayedData;
                 var tableContentFragment = document.createElement('tbody');
-                this._indexLastRowDisplay = Math.min(displayData.length, currentRowDisplay + this._nbRowDisplay);
-                var lastRowCreate = Math.min(displayData.length, currentRowDisplay + this._nbRowDisplay + this.cachedRow);
+                this._indexLastRowDisplay = Math.min(displayData.length, currentRowDisplay + this.nbRowDisplay);
+                var lastRowCreate = Math.min(displayData.length, currentRowDisplay + this.nbRowDisplay + this.cachedRow);
 
                 this.firstRowCreate = Math.max(0, currentRowDisplay - this.cachedRow);
 
@@ -332,7 +343,7 @@ require('inativ-x-inputfilter');
             },
             calculateHeaderWidth: function calculateHeaderWidth(nbSource) {
                 this.columnHeaderWrapper.style.width = "100%";
-                if (nbSource > this._nbRowDisplay) {
+                if (nbSource > this.nbRowDisplay) {
                     this.columnHeaderWrapper.style.width = (this.columnHeaderWrapper.offsetWidth - this.scrollBarWidth) + 'px';
                     this.columnHeaderWrapper.style.minWidth = (this.tableMinWidth - this.scrollBarWidth) + 'px';
                 } else {
@@ -351,8 +362,10 @@ require('inativ-x-inputfilter');
                     if (colHeader.columnClass) {
                         tdHeader.classList.add(colHeader.columnClass);
                     }
+                    tdHeader.style.minWidth = cellMinWidth + 'px';
                     tdHeader.style.width = cellMinWidth + 'px';
                     if (colHeader.width) {
+                        tdHeader.style.minWidth = colHeader.width + 'px';
                         tdHeader.style.width = colHeader.width + 'px';
                     }
                     ths.push(tdHeader);
@@ -365,8 +378,7 @@ require('inativ-x-inputfilter');
             },
             calculateContentSize: function calculateContentSize() {
                 var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
-                this._nbRowDisplay = this._nbRowDisplay || calculateNbRowDisplay(contentWrapperHeight, this.rowHeight);
-                contentWrapperHeight = (this._nbRowDisplay * this.rowHeight + 1);
+                contentWrapperHeight = (this.nbRowDisplay * this.rowHeight + 1);
 
                 if (contentWrapperHeight <= 0) {
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
@@ -383,7 +395,7 @@ require('inativ-x-inputfilter');
 
                 this.contentWrapper.style.maxHeight = contentWrapperHeight + 'px';
                 this.contentWrapper.style.minWidth = this.tableMinWidth + 'px';
-                this.cachedRow = this._nbRowDisplay * 2;
+                this.cachedRow = this.nbRowDisplay * 2;
             },
             calculateCurrentLine: function getDisplayFirstLine(scrollTop) {
                 var currentLine = Math.round(scrollTop / this.rowHeight);
