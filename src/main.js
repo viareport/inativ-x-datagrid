@@ -26,13 +26,21 @@ require('inativ-x-inputfilter');
         return value;
     }
 
-    function defaultFilterFunction(element, regex) {
+    function defaultFilterFunction(element, filterValue) {
+        var regexpText;
+        if (filterValue.indexOf("*")!== -1){
+            regexpText = escapeRegExp(filterValue).replace(/\\\*/g, ".*");
+        } else {
+            regexpText = "^" + escapeRegExp(filterValue); // par defaut, on applique la regle "commence par"
+        }
+        var regex = new RegExp(regexpText, "i");
         if (regex.test(" ") && (element === null || element.length === 0)) { // un espace dans le filtre signifie qu'on veut recuperer toutes les cellules vides
             return true;
         } else {
         return regex.test(element);
         }
     }
+
 
     xtag.register('x-datagrid', {
         lifecycle: {
@@ -410,13 +418,12 @@ require('inativ-x-inputfilter');
                     throw new Error('Empty column index');
                 }
 
-                var regExp = new RegExp('^'+ escapeRegExp(filter), "i"),
-                    datagrid = this;
+                var datagrid = this;
 
                 return data.filter(function (row) {
                     var elem = row.rowValue[columnIndex].value,
                         filterFn = datagrid.header[0][columnIndex].filterFn || defaultFilterFunction,
-                        isIncluded = filterFn(elem, regExp);
+                        isIncluded = filterFn(elem, filter);
                     if (!isIncluded) {
                         row.filteredIndex = -1;
                     }
