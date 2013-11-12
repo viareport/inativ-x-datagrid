@@ -33,6 +33,11 @@ var testSuite = new TestSuite("Datagrid test", {
                 {value: "C"+i},
             ]);
         }
+        _content.push([
+            {value: ""}, //pour le test de filtre sur les input vides
+            {value: "B3001"+i},
+            {value: "C3001"},
+        ]);
 
         datagrid.content = _content;
 
@@ -57,6 +62,15 @@ testSuite.addTest("Affichage de la grille", function (scenario, asserter) {
 testSuite.addTest("Application d'un filtre", function (scenario, asserter) {
     scenario
         .fill(filterInputSelector, 'A3000')
+        .keyboard(filterInputSelector, "keyup", "Enter", 13);
+
+    //"Après filtre, le tableau doit contenir 3 cellules de contenu"
+    asserter.expect(".x-datagrid-td").to.have.nodeLength(3);
+});
+
+testSuite.addTest("Application d'un filtre avec un espace = on veut récupérer toutes les cellules vides", function (scenario, asserter) {
+    scenario
+        .fill(filterInputSelector, ' ')
         .keyboard(filterInputSelector, "keyup", "Enter", 13);
 
     //"Après filtre, le tableau doit contenir 3 cellules de contenu"
@@ -147,7 +161,7 @@ testSuite.addTest("onContentRendered est appellé sur les plugins lors d'un repa
         ];
     });
 
-    // Then    
+    // Then
 
     asserter.assertTrue(function() {
         return plugin.onContentRenderedCalled === 1;

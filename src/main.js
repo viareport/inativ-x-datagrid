@@ -16,7 +16,7 @@ require('inativ-x-inputfilter');
     /* Les perfs sont meilleurs qu'avec l'autre technique, mais il faudrait quand même utiliser la technique de w2ui */
 
     function escapeRegExp(string) {
-        return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+        return string.replace(/([\\s.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     }
 
     function defaultTemplate(value) {
@@ -27,7 +27,11 @@ require('inativ-x-inputfilter');
     }
 
     function defaultFilterFunction(element, regex) {
+        if (regex.test(" ") && (element === null || element.length === 0)) { // un espace dans le filtre signifie qu'on veut recuperer toutes les cellules vides
+            return true;
+        } else {
         return regex.test(element);
+        }
     }
 
     xtag.register('x-datagrid', {
@@ -406,7 +410,7 @@ require('inativ-x-inputfilter');
                     throw new Error('Empty column index');
                 }
 
-                var regExp = new RegExp('^' + escapeRegExp(filter), "i"),
+                var regExp = new RegExp('^'+ escapeRegExp(filter), "i"),
                     datagrid = this;
 
                 return data.filter(function (row) {

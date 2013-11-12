@@ -54,7 +54,7 @@
         var content = [];
         for (var index = 0; index < 1000; index++) {
             content.push([
-                {value: "A" + index},
+                {value: index < 500 ? "E" + index : ''},//pour tester les cellules vides
                 {value: "B" + index},
                 {value: "C" + index},
                 {value: "D" + index},
