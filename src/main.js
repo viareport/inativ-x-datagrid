@@ -16,7 +16,7 @@ require('inativ-x-inputfilter');
     /* Les perfs sont meilleurs qu'avec l'autre technique, mais il faudrait quand même utiliser la technique de w2ui */
 
     function escapeRegExp(string) {
-        return string.replace(/([\\s.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+        return string.replace(/([\s.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     }
 
     function defaultTemplate(value) {
@@ -28,11 +28,16 @@ require('inativ-x-inputfilter');
 
     function defaultFilterFunction(element, filterValue) {
         var regexpText;
-        if (filterValue.indexOf("*")!== -1){
-            regexpText = escapeRegExp(filterValue).replace(/\\\*/g, ".*");
-        } else {
-            regexpText = "^" + escapeRegExp(filterValue); // par defaut, on applique la regle "commence par"
+        if (filterValue.indexOf("*") === 0){ // c'est le cas du finit par ou contient
+            if (filterValue.lastIndexOf("*") === filterValue.length - 1 ){
+                regexpText = escapeRegExp(filterValue).replace(/\\\*/g, ".*");
+            } else {
+                regexpText = escapeRegExp(filterValue).replace(/\\\*/g, "")+"$";
+            }
+        } else { //commence
+            regexpText = "^" + escapeRegExp(filterValue).replace(/\\\*/g, ".*"); //  on applique la regle "commence par"
         }
+        
         var regex = new RegExp(regexpText, "i");
         if (regex.test(" ") && (element === null || element.length === 0)) { // un espace dans le filtre signifie qu'on veut recuperer toutes les cellules vides
             return true;
