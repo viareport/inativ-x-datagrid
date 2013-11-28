@@ -328,8 +328,10 @@ require('inativ-x-inputfilter');
                             this.bindCustomEvents(cellData.events, td);
                         }
                         td.innerHTML = '';
-                        if (cellData.errorMessage) {         // c'est pas beau mais impossible de passer par le dataset pour un tooltip css (pas de polyfill pour IE)
-                            td.innerHTML += '<span class="error-message">' + cellData.errorMessage + '</span>';
+                        if (cellData.messages) {         // c'est pas beau mais impossible de passer par le dataset pour un tooltip css (pas de polyfill pour IE)
+                            for (var msgIdx=0; msgIdx < cellData.messages.length; msgIdx++) {
+                                td.innerHTML += '<span class="' + (cellData.messages[msgIdx].class || '') +'">' + cellData.messages[msgIdx].content + '</span>';
+                            }
                         }
                         //TODO : class pourrait etre un tableau
                         var cellClass = (cellData.class && cellData.class.join(' ')) || '';
@@ -578,7 +580,7 @@ function Cell(obj) {
     "use strict";
     this.value = obj.value || "";
     this.cellClass = obj.cellClass || "";
-    this.errorMessage = obj.errorMessage || "";
+    this.messages = obj.messages || [];
     this.events = obj.events || null;
     if (obj.class && !Array.isArray(obj.class)) {
         throw new Error('class on cell is an array');

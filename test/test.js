@@ -81,7 +81,11 @@ testSuite.addTest("Visualisation d'erreur dans la grille", function (scenario, a
     scenario.exec(function () {
         datagrid.content = [
             [
-                {value: "A1", errorMessage: "ceci est un message d'erreur"},
+                {value: "A1",
+                 messages: [{
+                    content:"ceci est un message d'erreur",
+                    class:"error-message"}]
+                },
                 {value: "B1"},
                 {value: "C1"}
             ],
