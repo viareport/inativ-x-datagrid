@@ -14,20 +14,6 @@ require('inativ-x-inputfilter');
     'use strict';
     /* Methods ou on a juste un wrapper (x-datagrid) autour d'une table */
     /* Les perfs sont meilleurs qu'avec l'autre technique, mais il faudrait quand même utiliser la technique de w2ui */
-    function escapeRegExp(string) {
-        return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
-    }
-
-    function defaultTemplate(value) {
-        if (value === null) {
-            return '';
-        }
-        return value;
-    }
-
-    function defaultFilterFunction(element, regex) {
-        return regex.test(element);
-    }
 
     xtag.register('x-datagrid', {
         lifecycle: {
@@ -41,7 +27,6 @@ require('inativ-x-inputfilter');
                 this.rowHeight = getTrHeight();
                 this.appendChild(this.columnHeaderWrapper);
                 this.appendChild(this.contentWrapper);
-                this._scrollTop = 0;
                 this._filters = [];
                 this.lastCurrentRow = 0;
                 this.scrollBarWidth = getScrollBarWidth();
@@ -58,7 +43,7 @@ require('inativ-x-inputfilter');
                 window.onresize = function () {
                     grid.originOnResize();
                     grid.calculateContentSize();
-                    grid.calculateHeaderWidth(grid.displayedData.length);
+                    grid.calculateHeaderWidth(grid.gridModel.getLength());
                     grid.plugins.forEach(function(plugin){
                         plugin.onResize();
                     });
@@ -72,18 +57,16 @@ require('inativ-x-inputfilter');
         },
         events: {
             contentUpdated: function contentUpdated() {
-                this._displayedData = null;
                 this.renderContent(this.lastCurrentRow);
             },
             headerUpdated: function headerUpdated() {
                 this.calculateMinimumWidth(this.cellMinWidth);
-                this.renderHeaders(this.data);
+                this.renderHeaders();
             },
             scroll: function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (e.target === this.contentWrapper) {
-                    //this._scrollTop = Number(e.target.scrollTop);
                     var currentRow = this.calculateCurrentLine(Number(e.target.scrollTop));
 
                     var diffBetweenLastCurrentRow = Math.abs(currentRow - this.lastCurrentRow);
@@ -92,198 +75,142 @@ require('inativ-x-inputfilter');
                         this.renderContent(currentRow);
                     }
                 }
-            },
-            filter: function (e) {
-                this._displayedData = null;
-                this.lastCurrentRow = 0;
-                if (e.detail.filterValue === undefined || e.detail.filterValue === "") {
-                    delete this._filters[e.detail.filterType];
-                } else {
-                    this._filters[e.detail.filterType] = e.detail.filterValue;
-                }
-                this.contentWrapper.scrollTop = 0;
-                this.renderContent(0);
             }
         },
         accessors: {
-            data: {
-                set: function (data) {
-                    this._data = {};
-                    this.header = data.colHeader;
-                    this.content = data.content;
-                },
-                get: function () {
-                    return this._data;
-                }
-            },
-            header: {
+            columnModel: {
                 set: function (header) {
-                    this._data.colHeader = header;
-                    var event = new CustomEvent('headerUpdated');
-                    this.dispatchEvent(event);
+                    if (header.renderHeader && header.getColumns && header.getCell) {
+                        this._columnModel = header;
+                    } else if (typeof header.length !== 'undefined') {
+                        this._columnModel = new DefaultColumnModel(header);
+                    } else {
+                        throw new Error("'columnModel' must be an array or an object implementing 'renderHeader()', 'getCell(row, col)' and 'getColumns()' methods");
+                    }
+                    this._columnModel.grid = this;
+                    this.dispatchEvent(new CustomEvent('headerUpdated'));
                 },
                 get: function () {
-                    return this._data.colHeader;
+                    return this._columnModel;
                 }
             },
-            content: {
+            gridModel: {
                 set: function (content) {
-                    this._data.content = []; // Okazou on viendrait du setData
-                    this._nbRow = content.length;
-
-                    for (var i = 0; i < content.length; i++) {
-                        this._data.content.push({
-                            originIndex: i,
-                            rowValue: content[i]
-                        }); // filteredIndex viendra se rajouter (cf renderContent et applyFilter). L'initialiser à i ?
+                    if (content.getLength && content.getRow) {
+                        this._gridModel = content;
+                    } else if (typeof content.length !== 'undefined') {
+                        this._gridModel = new DefaultDatagridModel(content);
+                    } else {
+                        throw new Error("'gridModel' must be an array or an object implementing 'getLength' and 'getRow(int)' methods");
                     }
-                    var event = new CustomEvent('contentUpdated');
-                    this.dispatchEvent(event);
+                    this._gridModel.grid = this;
+                    this.dispatchEvent(new CustomEvent('contentUpdated'));
                 },
                 get: function () {
-                    throw new Error("No getter available on datagrid content");
-                }
-            },
-            displayedData: {
-                get: function () {
-                    if (!this._displayedData) {
-                        var filteredData = this._data.content;
-
-                        this._filters.forEach(function (filter, columnIndex) {
-                            filteredData = this.applyFilter(filter, columnIndex, filteredData);
-                        }, this);
-
-                        this._displayedData = filteredData;
-                    }
-
-                    return this._displayedData;
+                    return this._gridModel;
                 }
             }
-
         },
         methods: {
+            getColumns: function getColumns() {
+                return this.columnModel.getColumns();
+            },
+            getCell: function getCell(row, column) {
+                return this.columnModel.getCell(row, column);
+            },
+            getRow: function getRow(rowIndex) {
+                return this.gridModel.getRow(rowIndex);
+            },
+            getLength: function getLength() {
+                return this.gridModel.getLength();
+            },
+            getContent: function getContent() {
+                var content = [];
+                for (var i=0 ; i<this.getLength() ; i++) {
+                    content.push(this.getRow(i));
+                }
+                return content;
+            },
             registerPlugin: function register(plugin) {
                 plugin.datagrid = this;
                 plugin.append();
                 this.plugins.push(plugin);
             },
-            render: function render(data, firstDisplay) {
-                firstDisplay = firstDisplay || 0;
-                var displayData = data || this._data;
-                this.renderHeaders(displayData);
-                this.renderContent(firstDisplay);
-            },
-            renderHeaders: function renderHeaders(data) {
-                var tableColHeader = document.createElement("table");
-
-                if (!data) {
-                    return;
-                }
-                for (var j = 0; j < data.colHeader.length; j++) {
-                    var trHeader = document.createElement("tr");
-                    var colHeader;
-                    for (var i = 0; i < data.colHeader[j].length; i++) {
-                        colHeader = data.colHeader[j][i];
-                        var tdHeader = this.renderHeader(colHeader, i);
-                        trHeader.appendChild(tdHeader);
-                    }
-                    tableColHeader.appendChild(trHeader);
-                }
-                this.columnHeaderWrapper.innerHTML = '';
-                this.columnHeaderWrapper.appendChild(tableColHeader);
-                this.calculateContentSize();
-            },
-            renderHeader: function renderHeader(colHeader, coldIdx) {
-                var tdHeader = document.createElement("th");
-                if (colHeader.class) {
-                    colHeader.class.forEach(function(elem){
-                        tdHeader.classList.add(elem);
+            bindCellEvents: function bindCellEvents(td, cell, row, column) {
+                var grid = this;
+                if (cell.events) {
+                    Object.keys(cell.events).forEach(function (eventType) {
+                        td.addEventListener(eventType, function(domEvt) {
+                            var customEvent = cell.events[eventType];
+                            grid.dispatchEvent(new CustomEvent(customEvent.event, {
+                                detail:  {
+                                    td: domEvt.currentTarget,
+                                    cell: cell,
+                                    row: row,
+                                    // rowIndex ?
+                                    column: column,
+                                    data: customEvent.data
+                                },
+                                bubbles: true
+                            }));
+                        });
                     });
                 }
-                if (this.header[0][coldIdx].columnClass) {
-                    tdHeader.classList.add(this.header[0][coldIdx].columnClass);
-                }
-                if (this.header[0][coldIdx].width) {
-                    tdHeader.style.width = this.header[0][coldIdx].width + "px";
-                }
-                if (colHeader.element) {
-                    tdHeader.appendChild(colHeader.element);
-                } else {
-                    tdHeader.setAttribute('class', tdHeader.getAttribute('class') + ' ' + 'sortable');
-                    if (colHeader.rowspan) {
-                        tdHeader.setAttribute('rowspan', colHeader.rowspan);
-                    }
-                    tdHeader.innerHTML = "<div class='x-datagrid-cell'>" + colHeader.value + "</div>";
-                    if (colHeader.filter) {
-                        var filter = document.createElement('x-inputfilter');
-                        if (colHeader.defaultFilter) {
-                            filter.setAttribute('defaultFilter', colHeader.defaultFilter);
-                            this._filters[coldIdx] = colHeader.defaultFilter;
-                        }
-                        filter.setAttribute('filterType', coldIdx);
-                        tdHeader.appendChild(filter);
-                    }
-                }
-                return tdHeader;
+            },
+            renderHeaders: function renderHeaders() {
+                var table = document.createElement('table'),
+                    tr = document.createElement('tr');
+                table.appendChild(tr);
+                this.columnModel.renderHeader(tr);
+                this.columnHeaderWrapper.innerHTML = '';
+                this.columnHeaderWrapper.appendChild(table);
+                this.calculateContentSize();
             },
             renderContent: function renderContent(currentRowDisplay) {
-                var displayData = this.displayedData;
+                var length = this.gridModel.getLength(); //displayData = this.displayedData;
                 var tableContentFragment = document.createElement('tbody');
-                var lastRowCreate = Math.min(displayData.length, currentRowDisplay + this._nbRowDisplay + this.cachedRow);
+                var lastRowCreate = Math.min(length, currentRowDisplay + this._nbRowDisplay + this.cachedRow);
 
                 this.firstRowCreate = Math.max(0, currentRowDisplay - this.cachedRow);
 
-                this.calculateHeaderWidth(displayData.length);
+                this.calculateHeaderWidth(length);
 
                 var rowIndex = this.firstRowCreate;
+
                 // Création de la première ligne qui doit simuler la taille de toutes les lignes présentes avant la ligne courante
                 if (currentRowDisplay !== this.firstRowCreate) {
                     tableContentFragment.appendChild(this.simulateMultiRow(this.firstRowCreate));
                     this.firstRowCreate--;
                 }
-                var fragment = document.createDocumentFragment();
+
                 for (; rowIndex < lastRowCreate; rowIndex++) {
-                    var tr = document.createElement("tr");
-                    tr.setAttribute('class', 'x-datagrid-tr');
-                    displayData[rowIndex].filteredIndex = rowIndex;
-                    var columnIndex = 0;
-                    for (; columnIndex < displayData[rowIndex].rowValue.length; columnIndex++) {
-                        var cellData = displayData[rowIndex].rowValue[columnIndex],
-                            td = document.createElement("td");
-
-                        // TODO au lieu de ça, injecter la cell dans le td
-                        if (this.header[0][columnIndex].width) {
-                            td.style.width = this.header[0][columnIndex].width + "px";
-                        }
-                        if (this.header[0][columnIndex].columnClass) {
-                            td.classList.add(this.header[0][columnIndex].columnClass);
-                        }
-                        td.cellValue = cellData.value;
-                        td.cellRow = displayData[rowIndex].originIndex;
-                        if (cellData.cellClass) {
-                            td.className = ' ' + cellData.cellClass;
-                        }
+                    //TODO errorMesage + bindEvents + class + cellClass
+                    var row = this.gridModel.getRow(rowIndex),
+                        tr = document.createElement('tr'),
+                        columns = this.columnModel.getColumns(),
+                        column, td, tdContentWrapper, colIdx, cell;
+                    tr.classList.add('x-datagrid-tr');
+                    for (colIdx = 0 ; colIdx < columns.length ; colIdx++) {
+                        column = columns[colIdx];
+                        td = document.createElement('td');
                         td.classList.add('x-datagrid-td');
-                        //td.setAttribute('class', ['x-datagrid-td', cellData.cellClass || null].join(' '));       // FIXME utiliser classlist
-
-                        if (cellData.events) {
-                            this.bindCustomEvents(cellData.events, td);
+                        if (column.width) {
+                            td.style.width = column.width + 'px';
                         }
-                        td.innerHTML = '';
-                        if(cellData.errorMessage){         // c'est pas beau mais impossible de passer par le dataset pour un tooltip css (pas de polyfill pour IE)
-                            td.innerHTML += '<span class="error-message">'+cellData.errorMessage+'</span>';
-                        }
-                        //TODO : class pourrait etre un tableau
-                        var cellClass = (cellData.class && cellData.class.join(' ')) || '';
-                        td.innerHTML += "<div class='x-datagrid-cell " + cellClass + "'>" + this.getCellTemplate(columnIndex)(cellData.value) + "</div>";
+                        tdContentWrapper = document.createElement('div');
+                        tdContentWrapper.className = 'x-datagrid-cell';
+                        td.appendChild(tdContentWrapper);
+                        cell = this.columnModel.getCell(row, column);
+                        this.bindCellEvents(td, cell, row, column);
                         tr.appendChild(td);
+                        column.renderer(tdContentWrapper, cell, row, column);
                     }
-                    fragment.appendChild(tr);
+                    tableContentFragment.appendChild(tr);
                 }
-                tableContentFragment.appendChild(fragment);
+
                 // S'il y a plus de lignes que celles que l'on affiche
-                if (lastRowCreate < displayData.length) {
-                    var nbRowAfterCurrent = displayData.length - lastRowCreate;
+                if (lastRowCreate < length) {
+                    var nbRowAfterCurrent = length - lastRowCreate;
                     tableContentFragment.appendChild(this.simulateMultiRow(nbRowAfterCurrent));
                     //et on en profite pour enlever la taille du scroll sur le tableau des colonnes headers
                 }
@@ -291,21 +218,6 @@ require('inativ-x-inputfilter');
 
                 this.tableContent.appendChild(tableContentFragment);
 
-            },
-            getCellTemplate: function getCellTemplate(columnIndex) {
-                return this.header[0][columnIndex].cellTemplate || defaultTemplate;
-            },
-            sort: function sortData(columnIndex) {
-                if (!columnIndex) {
-                    throw new Error('a pas le column index pour sorter la data');
-                }
-                var displayData = new Object(this._data);
-                var sortedData = displayData.slice(0);
-                sortedData.sort(function (a, b) {
-                    return a[columnIndex] - b[columnIndex];
-                });
-                displayData = sortedData;
-                return displayData;
             },
             calculateHeaderWidth: function calculateHeaderWidth(nbSource) {
                 this.columnHeaderWrapper.style.width = "100%";
@@ -321,19 +233,15 @@ require('inativ-x-inputfilter');
                 var table = document.createElement("table");
                 var trHeader = document.createElement("tr");
                 var ths = [];
-                for (var i = 0; i < this.header[0].length; i++) {
-                    var colHeader = this.header[0][i];
+                this.columnModel.getColumns().forEach(function(colHeader) {
                     var tdHeader = document.createElement("th");
-                    if (colHeader.columnClass) {
-                        tdHeader.classList.add(colHeader.columnClass);
-                    }
                     tdHeader.style.width = cellMinWidth + 'px';
                     if (colHeader.width) {
                         tdHeader.style.width = colHeader.width + 'px';
                     }
                     ths.push(tdHeader);
                     trHeader.appendChild(tdHeader);
-                }
+                });
                 table.appendChild(trHeader);
                 document.body.appendChild(table);
                 this.tableMinWidth = trHeader.offsetWidth;
@@ -345,9 +253,10 @@ require('inativ-x-inputfilter');
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
-                var totalMinWidth = this.header[0].reduce(function sumWidth(total, header) {
-                        return total + (header.width || this.cellMinWidth);
-                    }.bind(this), 0);
+                var totalMinWidth = 0;
+                this.columnModel.getColumns().forEach(function(colHeader) {
+                    totalMinWidth +=  colHeader.width || this.cellMinWidth;
+                }.bind(this));
 
                 if (totalMinWidth > this.offsetWidth) {
                     contentWrapperHeight -= this.scrollBarWidth;
@@ -364,65 +273,18 @@ require('inativ-x-inputfilter');
                 var currentLine = Math.round(scrollTop / this.rowHeight);
                 return  currentLine;
             },
-            applyFilter: function applyFilter(filter, columnIndex, data) {
-                if (columnIndex === undefined) {
-                    throw new Error('Empty column index');
-                }
-
-                var regExp = new RegExp('^' + escapeRegExp(filter), "i"),
-                    datagrid = this;
-
-                return data.filter(function (row) {
-                    var elem = row.rowValue[columnIndex].value,
-                        filterFn = datagrid.header[0][columnIndex].filterFn || defaultFilterFunction,
-                        isIncluded = filterFn(elem, regExp);
-                    if (! isIncluded) {
-                        row.filteredIndex = -1;
-                    }
-                    return isIncluded;
-                });
-            },
             simulateMultiRow: function (nbRow) {
                 var tr = document.createElement("tr");
                 var td;
-                var i = 0;
-                for(;i<this.header[0].length;i++) {
+                this.columnModel.getColumns().forEach(function(colHeader) {
                     td = document.createElement("td");
-                    if(this.header[0][i].width) {
-                        td.style.width = this.header[0][i].width + "px";
+                    if(colHeader.width) {
+                        td.style.width = colHeader.width + "px";
                     }
                     tr.appendChild(td);
-                }
+                });
                 tr.style.height = (nbRow * this.rowHeight) + 'px';
                 return tr;
-            },
-            
-            //TODO : privée ? bindCellEvts ?
-            bindCustomEvents: function (eventsTab, element) {
-                var events = eventsTab;
-                var eventTypes = Object.keys(events);
-                var that = this;
-                eventTypes.forEach(function (eventType) {
-                    var eventName = eventType;
-                    var customEventName = events[eventName].event;
-                    
-                    if (events[eventName].data.hasOwnProperty('element')) {
-                        throw new Error('Reserved data property name "element"');
-                    }
-                    
-                    //TODO data.cell ?
-                    var data = {'element': element};
-                    for(var key in events[eventName].data) {
-                        data[key] = events[eventName].data[key];
-                    }
-
-
-                    var customEvent = new CustomEvent(customEventName, {'detail': data, 'bubbles': true});
-
-                    element.addEventListener(eventName, function () {
-                        that.dispatchEvent(customEvent);
-                    });
-                });
             },
             getThColumnHeader: function getColumnHeaderTdWidth(colIndex) {
                 return this.columnHeaderWrapper.querySelector("tr:nth-child(1) th:nth-child(" + colIndex + ")");
@@ -481,21 +343,73 @@ require('inativ-x-inputfilter');
 
 })();
 
+function DefaultDatagridModel(content) {
+    this.content = content || [];
+}
+DefaultDatagridModel.prototype.getLength = function getLength() {
+    return this.content.length;
+};
+DefaultDatagridModel.prototype.getRow = function(rowIndex) {
+    return this.content[rowIndex];
+};
+
+
+function DefaultColumnModel(header) {
+    this.columns = header.map(function(headerElt, index) {
+        return new Column(headerElt, index);//TODO bouge dans le grid
+    });
+}
+DefaultColumnModel.prototype.renderHeader = function(tr) {
+    this.columns.forEach(function(col) {
+        var th = document.createElement('th');
+        if (col.width) { //TODO trouver une idée pour garder ça dans le datagrid
+            th.style.width =  col.width + 'px';
+        }
+        th.innerHTML = '<div class="x-datagrid-cell">' + col.value + '</div>';
+        tr.appendChild(th);
+    });
+};
+DefaultColumnModel.prototype.getColumns = function() { //TODO bouge dans le grid ? euh ptet pas, ce serait à toi de savoir quelles sont les colonnes à afficher
+    return this.columns;
+};
+DefaultColumnModel.prototype.getCell = function(row, column) { // euh...
+    return row[column.index];
+};
+
+
+
+function Column(def, index) { //TODO permettre des attributs custo ??
+    this.value = def.value; //TODO renommer en label ? ou objet complexe pour custo ?
+    this.width = def.width;
+    this.index = index;
+    this.renderer = def.renderer || defaultRenderer;
+}
+function defaultRenderer(tdContentWrapper, cell, row, column) { //TODO ajouter la div avec sa superbe classe avant et la passer en paramètre ? à la place de la td ?
+     //TODO add class ?
+    if (cell.cellClass) { //TODO array ? c'est du default ça ?
+        tdContentWrapper.parentNode.className += ' ' + cell.cellClass;
+    }
+    tdContentWrapper.innerHTML = cell.value === null ? '' : cell.value; //TODO dégager cell.value pour que cell soit la value directement ?
+}
+
 // cellClass utilisé pour le td
 // class utilisé pour la div dans le td
-function Cell(obj) {
+function Cell(obj) { //FIXME pas utilisé dans cette implémentation !
     "use strict";
     this.value = obj.value || "";
-    this.cellClass = obj.cellClass || "";
-    this.errorMessage = obj.errorMessage || "";
+    this.cellClass = obj.cellClass || ""; // default toi ? je crois plutôt que c'est juste value et events les attributs de base
+    this.errorMessage = obj.errorMessage || ""; //ARGH vas-t-en dans un custom renderer vilain
     this.events = obj.events || null;
     if(obj.class && !Array.isArray(obj.class)) {
         throw new Error('class on cell is an array');
     }
-    this.rowspan = obj.rowspan || 0;
-    this.colspan = obj.colspan || 0;
-    this.class = obj.class || [];
-    this.rowIndex = obj.rowIndex || null; //TODO A utiiser en remplacement du td.cellRow
-    this.columnIndex = obj.columnIndex || null; //TODO Non utilisé pour le moment
+    this.rowspan = obj.rowspan || 0; // ???
+    this.colspan = obj.colspan || 0; // ???
+    this.class = obj.class || []; //TODO A DEGAGER (utiliser cellClass)
+    this.rowIndex = obj.rowIndex || null; //TODO A utiiser en remplacement du td.cellRow A DEGAGER ou à mettre direct dans les events
+    this.columnIndex = obj.columnIndex || null; //TODO Non utilisé pour le moment A DEGAGER ou à mettre direct dans les events
 }
-module.exports = {'Cell': Cell};
+module.exports = {
+    Cell: Cell,
+    Column: Column
+};

@@ -4,8 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <title>x-datagrid Demo - X-Tag</title>
-    <link rel="stylesheet" type="text/css" href="/build/main.css"/>
-    <link rel="stylesheet" type="text/css" href="demo.css"/>
+    <link rel="stylesheet" type="text/css" href="/demo/main.css"/>
     <style>
         table {
             border-collapse: collapse;
@@ -44,7 +43,7 @@
     </x-datagrid>
 </body>
 
-<script type="text/javascript" src="/build/main.js"></script>
+<script type="text/javascript" src="/demo/main.js"></script>
 <script type="text/javascript">
     document.addEventListener('DOMComponentsLoaded', function () {
         var datagrid = document.querySelector('x-datagrid');
@@ -56,22 +55,29 @@
                 {value: "B" + index},
                 {value: "C" + index},
                 {value: "D" + index},
-                {value: "E" + index}
+                {value: "E" + index,
+                 events: {
+                    click: {
+                        event: 'pinkify'
+                    }
+                 }}
             ]);
         }
 
-        datagrid.data = {
-            colHeader: [
-                [
-                    {value: 'column1', filter: true},
-                    {value: 'column2', width: 10},
-                    {value: 'column3'},
-                    {value: 'column4', columnClass: 'test-column'},
-                    {value: 'column5'}
-                ]
-            ],
-            content: content
-        };
+        datagrid.columnModel = [
+            {value: 'column1'},
+            {value: 'column2', width: 50},
+            {value: 'column3', renderer: function(tdContentWrapper, cell, row, column) {
+                tdContentWrapper.innerHTML = cell.value + " decorated";
+            }},
+            {value: 'column4'},
+            {value: 'column5'}
+        ];
+        datagrid.gridModel = content;
+
+        datagrid.addEventListener('pinkify', function(evt) {
+            evt.detail.td.style.backgroundColor = 'pink';
+        });
     }, false);
 
 </script>
