@@ -14,7 +14,7 @@ require('inativ-x-inputfilter');
     'use strict';
     /* Methods ou on a juste un wrapper (x-datagrid) autour d'une table */
     /* Les perfs sont meilleurs qu'avec l'autre technique, mais il faudrait quand même utiliser la technique de w2ui */
-
+    
     xtag.register('x-datagrid', {
         lifecycle: {
             created: function created() {
@@ -27,12 +27,16 @@ require('inativ-x-inputfilter');
                 this.rowHeight = getTrHeight();
                 this.appendChild(this.columnHeaderWrapper);
                 this.appendChild(this.contentWrapper);
-                this._filters = [];
-                this.lastCurrentRow = 0;
+                this._scrollTop = 0; //TODO utilisé ???
+                this._filters = []; //TODO utilisé ???
                 this.scrollBarWidth = getScrollBarWidth();
                 this.tableMinWidth = 0;
                 this.plugins = [];
                 this.firstRowCreate = null;
+                this.nbRowDisplay = null;
+
+                this._indexFirstRowDisplay = 0;
+                this._indexLastRowDisplay = 0;
 
                 this.cellMinWidth = Number(this.getAttribute('cell-width') || 150);
                 
@@ -44,7 +48,7 @@ require('inativ-x-inputfilter');
                     grid.originOnResize();
                     grid.calculateContentSize();
                     grid.calculateHeaderWidth(grid.gridModel.getLength());
-                    grid.plugins.forEach(function(plugin){
+                    grid.plugins.forEach(function (plugin) {
                         plugin.onResize();
                     });
                 };
@@ -52,12 +56,17 @@ require('inativ-x-inputfilter');
             removed: function removed() {
                 window.onresize = this.originOnResize;
             },
-            attributeChanged: function attributedChanged() {
+            attributeChanged: function attributedChanged(attribute) {
+                switch (attribute) {
+                    case "cell-width":
+                        this.cellMinWidth = Number(this.getAttribute('cell-width') || 150);
+                        break;
+                }
             }
         },
         events: {
             contentUpdated: function contentUpdated() {
-                this.renderContent(this.lastCurrentRow);
+                this.renderContent(this._indexFirstRowDisplay);
             },
             headerUpdated: function headerUpdated() {
                 this.calculateMinimumWidth(this.cellMinWidth);
@@ -69,15 +78,16 @@ require('inativ-x-inputfilter');
                 if (e.target === this.contentWrapper) {
                     var currentRow = this.calculateCurrentLine(Number(e.target.scrollTop));
 
-                    var diffBetweenLastCurrentRow = Math.abs(currentRow - this.lastCurrentRow);
-                    if (diffBetweenLastCurrentRow > this._nbRowDisplay) {
-                        this.lastCurrentRow = currentRow;
+                    var diffBetweenLastCurrentRow = Math.abs(currentRow - this._indexFirstRowDisplay);
+                    if (diffBetweenLastCurrentRow > this.nbRowDisplay) {
+                        this._indexFirstRowDisplay = currentRow;
                         this.renderContent(currentRow);
                     }
                 }
             }
         },
         accessors: {
+
             columnModel: {
                 set: function (header) {
                     if (header.renderHeader && header.getColumns && header.getCell) {
@@ -109,6 +119,30 @@ require('inativ-x-inputfilter');
                 get: function () {
                     return this._gridModel;
                 }
+            },
+            nbRowDisplay: { // t'es qui toi ?
+                get: function() {
+                    var nbRowDisplay = 0;
+                    var attribute = Number(this.getAttribute('nb-row-display'));
+                    if(attribute) {
+                        nbRowDisplay = attribute;
+                    } else {
+                        var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
+                        nbRowDisplay = calculateNbRowDisplay(contentWrapperHeight, this.rowHeight);
+                    }
+                    return nbRowDisplay;
+                },
+                set: function() {}
+            },
+            lastRowDisplay: { // t'es qui toi ?
+                get: function () {
+                    return this._indexLastRowDisplay;
+                }
+            },
+            firstRowDisplay: { // t'es qui toi ?
+                get: function () {
+                    return this._indexFirstRowDisplay;
+                }
             }
         },
         methods: {
@@ -131,7 +165,7 @@ require('inativ-x-inputfilter');
                 }
                 return content;
             },
-            registerPlugin: function register(plugin) {
+            registerPlugin: function registerPlugin(plugin) {
                 plugin.datagrid = this;
                 plugin.append();
                 this.plugins.push(plugin);
@@ -157,7 +191,7 @@ require('inativ-x-inputfilter');
                     });
                 }
             },
-            renderHeaders: function renderHeaders() {
+            renderHeaders: function renderHeaders() { //FIXME perte de support de columnClass, element et rowspan (à implémenter dans un modèle custo ?)
                 var table = document.createElement('table'),
                     tr = document.createElement('tr');
                 table.appendChild(tr);
@@ -169,14 +203,13 @@ require('inativ-x-inputfilter');
             renderContent: function renderContent(currentRowDisplay) {
                 var length = this.gridModel.getLength(); //displayData = this.displayedData;
                 var tableContentFragment = document.createElement('tbody');
-                var lastRowCreate = Math.min(length, currentRowDisplay + this._nbRowDisplay + this.cachedRow);
-
+                this._indexLastRowDisplay = Math.min(length, currentRowDisplay + this.nbRowDisplay);
+                var lastRowCreate = Math.min(length, currentRowDisplay + this.nbRowDisplay + this.cachedRow);
                 this.firstRowCreate = Math.max(0, currentRowDisplay - this.cachedRow);
 
                 this.calculateHeaderWidth(length);
 
                 var rowIndex = this.firstRowCreate;
-
                 // Création de la première ligne qui doit simuler la taille de toutes les lignes présentes avant la ligne courante
                 if (currentRowDisplay !== this.firstRowCreate) {
                     tableContentFragment.appendChild(this.simulateMultiRow(this.firstRowCreate));
@@ -184,7 +217,7 @@ require('inativ-x-inputfilter');
                 }
 
                 for (; rowIndex < lastRowCreate; rowIndex++) {
-                    //TODO errorMesage + bindEvents + class + cellClass
+                    //TODO class + cellClass
                     var row = this.gridModel.getRow(rowIndex),
                         tr = document.createElement('tr'),
                         columns = this.columnModel.getColumns(),
@@ -217,11 +250,16 @@ require('inativ-x-inputfilter');
                 this.tableContent.innerHTML = '';
 
                 this.tableContent.appendChild(tableContentFragment);
+                this.plugins.forEach(function (plugin) {
+                    if (plugin.onContentRendered) {
+                        plugin.onContentRendered();
+                    }
+                });
 
             },
             calculateHeaderWidth: function calculateHeaderWidth(nbSource) {
                 this.columnHeaderWrapper.style.width = "100%";
-                if (nbSource > this._nbRowDisplay) {
+                if (nbSource > this.nbRowDisplay) {
                     this.columnHeaderWrapper.style.width = (this.columnHeaderWrapper.offsetWidth - this.scrollBarWidth) + 'px';
                     this.columnHeaderWrapper.style.minWidth = (this.tableMinWidth - this.scrollBarWidth) + 'px';
                 } else {
@@ -235,6 +273,10 @@ require('inativ-x-inputfilter');
                 var ths = [];
                 this.columnModel.getColumns().forEach(function(colHeader) {
                     var tdHeader = document.createElement("th");
+					// FIXME rétablir le support de columnClass ?
+                    if (colHeader.columnClass) {
+                        tdHeader.classList.add(colHeader.columnClass);
+                    }
                     tdHeader.style.width = cellMinWidth + 'px';
                     if (colHeader.width) {
                         tdHeader.style.width = colHeader.width + 'px';
@@ -249,35 +291,38 @@ require('inativ-x-inputfilter');
             },
             calculateContentSize: function calculateContentSize() {
                 var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
-                if (contentWrapperHeight <= 0) {
+                contentWrapperHeight = (this.nbRowDisplay * this.rowHeight + 1);
+                
+				if (contentWrapperHeight <= 0) {
                     throw new Error("Wrong height calculated: " + contentWrapperHeight + "px. Explicitly set the height of the parent elements (consider position: absolute; top:0; bottom:0)");
                 }
 
-                var totalMinWidth = 0;
-                this.columnModel.getColumns().forEach(function(colHeader) {
-                    totalMinWidth +=  colHeader.width || this.cellMinWidth;
-                }.bind(this));
+                var totalMinWidth = this.columnModel.getColumns().reduce(function sumWidth(total, header) {
+                        return total + (header.width || this.cellMinWidth);
+                    }.bind(this), 0);
 
                 if (totalMinWidth > this.offsetWidth) {
                     contentWrapperHeight -= this.scrollBarWidth;
                 } else {
                     this.contentWrapper.style.width = '100%';
                 }
-                this.contentWrapper.style.height = contentWrapperHeight + 'px';
+                this.contentWrapper.style.maxHeight = contentWrapperHeight + 'px';
                 this.contentWrapper.style.minWidth = this.tableMinWidth + 'px';
 
-                this._nbRowDisplay = Math.floor(contentWrapperHeight / this.rowHeight);
-                this.cachedRow = this._nbRowDisplay * 2;
+                this.cachedRow = this.nbRowDisplay * 2;
             },
             calculateCurrentLine: function getDisplayFirstLine(scrollTop) {
                 var currentLine = Math.round(scrollTop / this.rowHeight);
                 return  currentLine;
             },
-            simulateMultiRow: function (nbRow) {
+            simulateMultiRow: function simulateMultiRow(nbRow) {
                 var tr = document.createElement("tr");
                 var td;
                 this.columnModel.getColumns().forEach(function(colHeader) {
                     td = document.createElement("td");
+                    if (colHeader.columnClass) { //FIXME support de la propriété columnClass ?
+                        td.classList.add(colHeader.columnClass);
+                    }
                     if(colHeader.width) {
                         td.style.width = colHeader.width + "px";
                     }
@@ -290,10 +335,47 @@ require('inativ-x-inputfilter');
                 return this.columnHeaderWrapper.querySelector("tr:nth-child(1) th:nth-child(" + colIndex + ")");
             },
             getCellAt: function getCellAt(xCoord, yCoord) {
-                return this.contentWrapper.querySelector("table tr:nth-child("+(yCoord-this.firstRowCreate+1)+") td:nth-child(" + (xCoord+1) + ")");
+                return this.contentWrapper.querySelector("table tr:nth-child(" + (yCoord - this.firstRowCreate + 1) + ") td:nth-child(" + (xCoord + 1) + ")");
+            },
+            makeCellVisible: function makeCellVisible(rowIndex, columnIndex) {
+
+                var wrapper = this.contentWrapper;
+
+                var cellCoords = this.getCellCoords(rowIndex, columnIndex);
+                if (cellCoords) {
+                    if (cellCoords.y < wrapper.scrollTop) {
+                        wrapper.scrollTop = cellCoords.y;
+                    } else if (cellCoords.y + 2 * cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
+                        wrapper.scrollTop = cellCoords.y - wrapper.offsetHeight + cellCoords.height;
+                    }
+
+                    if (cellCoords.x < this.scrollLeft) {
+                        this.scrollLeft = cellCoords.x;
+                    } else if (cellCoords.x + cellCoords.width > this.scrollLeft + this.offsetWidth) {
+                        this.scrollLeft = cellCoords.x - this.offsetWidth + cellCoords.width;
+                    }
+                }
+            },
+            getCellCoords: function (rowIndex, columnIndex) {
+                var sameColumnCell = this.getCellAt(columnIndex, this.firstRowCreate + 1),
+                    sameColumnCellRowIndex;
+                if (sameColumnCell) {
+                    sameColumnCellRowIndex = this._indexFirstRowDisplay + sameColumnCell.parentNode.sectionRowIndex;
+                    return {
+                        x: sameColumnCell.offsetLeft,
+                        y: ((rowIndex - sameColumnCellRowIndex) * sameColumnCell.offsetHeight) + sameColumnCell.offsetTop,
+                        width: sameColumnCell.offsetWidth,
+                        height: sameColumnCell.offsetHeight
+                    };
+                } else {
+                    return null;
+                }
             }
         }
     });
+    function calculateNbRowDisplay(contentWrapperHeight, rowHeight) {
+        return Math.floor(contentWrapperHeight / rowHeight);
+    }
 
     //Recuperation de la taille de la scrollbar selon le navigateur
     function getScrollBarWidth() {
@@ -335,7 +417,7 @@ require('inativ-x-inputfilter');
         document.body.appendChild(table);
         var trOffsetHeight = tr.offsetHeight;
         document.body.removeChild(table);
-        if(trOffsetHeight === 0) {
+        if (trOffsetHeight === 0) {
             throw new Error('Erreur lors du calcul de la hauteur disponible pour une ligne');
         }
         return trOffsetHeight;
@@ -398,9 +480,9 @@ function Cell(obj) { //FIXME pas utilisé dans cette implémentation !
     "use strict";
     this.value = obj.value || "";
     this.cellClass = obj.cellClass || ""; // default toi ? je crois plutôt que c'est juste value et events les attributs de base
-    this.errorMessage = obj.errorMessage || ""; //ARGH vas-t-en dans un custom renderer vilain
+    this.messages = obj.messages || ""; //ARGH vas-t-en dans un custom renderer vilain
     this.events = obj.events || null;
-    if(obj.class && !Array.isArray(obj.class)) {
+    if (obj.class && !Array.isArray(obj.class)) {
         throw new Error('class on cell is an array');
     }
     this.rowspan = obj.rowspan || 0; // ???
@@ -409,7 +491,4 @@ function Cell(obj) { //FIXME pas utilisé dans cette implémentation !
     this.rowIndex = obj.rowIndex || null; //TODO A utiiser en remplacement du td.cellRow A DEGAGER ou à mettre direct dans les events
     this.columnIndex = obj.columnIndex || null; //TODO Non utilisé pour le moment A DEGAGER ou à mettre direct dans les events
 }
-module.exports = {
-    Cell: Cell,
-    Column: Column
-};
+module.exports = {'Cell': Cell};

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <title>x-datagrid Demo - X-Tag</title>
-    <link rel="stylesheet" type="text/css" href="/demo/main.css"/>
+    <link rel="stylesheet" type="text/css" href="/build/main.css"/>
     <style>
         table {
             border-collapse: collapse;
@@ -43,7 +43,9 @@
     </x-datagrid>
 </body>
 
-<script type="text/javascript" src="/demo/main.js"></script>
+<script type="text/javascript" src="/lib/polyfill-customEvent.js"></script>
+<script type="text/javascript" src="/lib/x-tag-core.js"></script>
+<script type="text/javascript" src="/build/main.js"></script>
 <script type="text/javascript">
     document.addEventListener('DOMComponentsLoaded', function () {
         var datagrid = document.querySelector('x-datagrid');
@@ -51,7 +53,7 @@
         var content = [];
         for (var index = 0; index < 1000; index++) {
             content.push([
-                {value: "A" + index},
+                {value: index < 500 ? "A" + index : ''},//pour tester les cellules vides
                 {value: "B" + index},
                 {value: "C" + index},
                 {value: "D" + index},
@@ -71,7 +73,7 @@
                 tdContentWrapper.innerHTML = cell.value + " decorated";
             }},
             {value: 'column4'},
-            {value: 'column5'}
+                    {value: 'column5'}
         ];
         datagrid.gridModel = content;
 

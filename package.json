@@ -1,28 +1,28 @@
 {
-    "name": "inativ-x-datagrid",
-    "description": "Le Datagrid aka \"excel.js\"",
-    "version": "0.1.1",
-    "repository": {
-        "type": "git",
-        "url": "git://github.com:viareport/inativ-x-datagrid.git"
-    },
-    "main": "./dist/main.js",
-    "keywords": [],
-    "dependencies": {
-        "inativ-x-inputfilter": "~0.1.0"
-    },
-    "devDependencies": {
-        "grunt": "~0.4.0",
-        "spatester": "1.x.x",
-        "grunt-subgrunt": "~0.2.2",
-        "inativ-gruntfile": "~0.0.1"
-    },
-    "engines": {
-        "node": "~0.10.18"
-    },
-    "author": {
-        "name": "Inativ",
-        "email": "inativ@viareport.com",
-        "url": "http://viareport.com"
-    }
+  "name": "inativ-x-datagrid",
+  "description": "Le Datagrid aka \"excel.js\"",
+  "version": "0.1.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com:viareport/inativ-x-datagrid.git"
+  },
+  "main": "./dist/main.js",
+  "keywords": [],
+  "dependencies": {
+      "inativ-x-inputfilter": "~0.1.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.0",
+    "spatester": "1.x.x",
+    "grunt-subgrunt": "~0.2.2",
+    "inativ-gruntfile": "~0.0.1"
+  },
+  "engines": {
+    "node": "~0.10.18"
+  },
+  "author": {
+    "name": "Inativ",
+    "email": "inativ@viareport.com",
+    "url": "http://viareport.com"
+  }
 }
