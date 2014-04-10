@@ -28,24 +28,23 @@ require('inativ-x-inputfilter');
 
     function defaultFilterFunction(element, filterValue) {
         var regexpText;
-        if (filterValue.indexOf("*") === 0){ // c'est le cas du finit par ou contient
-            if (filterValue.lastIndexOf("*") === filterValue.length - 1 ){
+        if (filterValue.indexOf("*") === 0) { // c'est le cas du finit par ou contient
+            if (filterValue.lastIndexOf("*") === filterValue.length - 1) {
                 regexpText = escapeRegExp(filterValue).replace(/\\\*/g, ".*");
             } else {
-                regexpText = escapeRegExp(filterValue).replace(/\\\*/g, "")+"$";
+                regexpText = escapeRegExp(filterValue).replace(/\\\*/g, "") + "$";
             }
         } else { //commence
             regexpText = "^" + escapeRegExp(filterValue).replace(/\\\*/g, ".*"); //  on applique la regle "commence par"
         }
-        
+
         var regex = new RegExp(regexpText, "i");
         if (regex.test(" ") && (element === null || element.length === 0)) { // un espace dans le filtre signifie qu'on veut recuperer toutes les cellules vides
             return true;
         } else {
-        return regex.test(element);
+            return regex.test(element);
         }
     }
-
 
     xtag.register('x-datagrid', {
         lifecycle: {
@@ -60,7 +59,7 @@ require('inativ-x-inputfilter');
                 this.appendChild(this.columnHeaderWrapper);
                 this.appendChild(this.contentWrapper);
                 this._scrollTop = 0;
-                this._filters = [];
+                this._filters = {};
                 this.scrollBarWidth = getScrollBarWidth();
                 this.tableMinWidth = 0;
                 this.plugins = [];
@@ -172,10 +171,10 @@ require('inativ-x-inputfilter');
                 }
             },
             nbRowDisplay: {
-                get: function() {
+                get: function () {
                     var nbRowDisplay = 0;
                     var attribute = Number(this.getAttribute('nb-row-display'));
-                    if(attribute) {
+                    if (attribute) {
                         nbRowDisplay = attribute;
                     } else {
                         var contentWrapperHeight = this.offsetHeight - this.columnHeaderWrapper.offsetHeight;
@@ -183,16 +182,17 @@ require('inativ-x-inputfilter');
                     }
                     return nbRowDisplay;
                 },
-                set: function() {}
+                set: function () {
+                }
             },
             displayedData: {
                 get: function () {
                     if (!this._displayedData) {
                         var filteredData = this._data.content;
 
-                        this._filters.forEach(function (filter, columnIndex) {
-                            filteredData = this.applyFilter(filter, columnIndex, filteredData);
-                        }, this);
+                        for (var key in this._filters) {
+                            filteredData = this.applyFilter(this._filters[key], key, filteredData);
+                        }
 
                         this._displayedData = filteredData;
                     }
@@ -329,8 +329,8 @@ require('inativ-x-inputfilter');
                         }
                         td.innerHTML = '';
                         if (cellData.messages) {         // c'est pas beau mais impossible de passer par le dataset pour un tooltip css (pas de polyfill pour IE)
-                            for (var msgIdx=0; msgIdx < cellData.messages.length; msgIdx++) {
-                                td.innerHTML += '<span class="' + (cellData.messages[msgIdx].class || '') +'">' + cellData.messages[msgIdx].content + '</span>';
+                            for (var msgIdx = 0; msgIdx < cellData.messages.length; msgIdx++) {
+                                td.innerHTML += '<span class="' + (cellData.messages[msgIdx].class || '') + '">' + cellData.messages[msgIdx].content + '</span>';
                             }
                         }
                         //TODO : class pourrait etre un tableau
@@ -372,7 +372,7 @@ require('inativ-x-inputfilter');
             calculateMinimumWidth: function calculateMinimumWidth(cellMinWidth) {
                 this.tableMinWidth = 0;
                 var table = document.createElement("table");
-                table.style.width="auto";
+                table.style.width = "auto";
                 var trHeader = document.createElement("tr");
                 var ths = [];
                 for (var i = 0; i < this.header[0].length; i++) {
@@ -492,7 +492,7 @@ require('inativ-x-inputfilter');
                 var wrapper = this.contentWrapper;
 
                 var cellCoords = this.getCellCoords(rowIndex, columnIndex);
-                if(cellCoords) {
+                if (cellCoords) {
                     if (cellCoords.y < wrapper.scrollTop) {
                         wrapper.scrollTop = cellCoords.y;
                     } else if (cellCoords.y + 2 * cellCoords.height > wrapper.scrollTop + wrapper.offsetHeight) {
@@ -508,7 +508,7 @@ require('inativ-x-inputfilter');
             },
             getCellCoords: function (rowIndex, columnIndex) {
                 var sameColumnCell = this.getCellAt(columnIndex, this.firstRowCreate + 1);
-                if(sameColumnCell) {
+                if (sameColumnCell) {
                     return {
                         x: sameColumnCell.offsetLeft,
                         y: ((rowIndex - sameColumnCell.rowIndex) * sameColumnCell.offsetHeight) + sameColumnCell.offsetTop,
@@ -518,6 +518,9 @@ require('inativ-x-inputfilter');
                 } else {
                     return null;
                 }
+            },
+            hasFilter: function () {
+                return Object.keys(this._filters).length > 0;
             }
         }
     });

@@ -68,6 +68,20 @@ testSuite.addTest("Application d'un filtre", function (scenario, asserter) {
     asserter.expect(".x-datagrid-td").to.have.nodeLength(3);
 });
 
+testSuite.addTest("Détection de la présence de filtre", function (scenario, asserter) {
+    asserter.assertTrue(function () {
+        return !datagrid.hasFilter()
+    }, "Le datagrid ne doit pas avoir de filtre");
+
+    scenario
+        .fill(filterInputSelector, 'A3000')
+        .keyboard(filterInputSelector, "keyup", "Enter", 13);
+
+    asserter.assertTrue(function () {
+        return datagrid.hasFilter()
+    }, "Le datagrid doit avoir des filtres");
+});
+
 testSuite.addTest("Application d'un filtre avec un espace = on veut récupérer toutes les cellules vides", function (scenario, asserter) {
     scenario
         .fill(filterInputSelector, ' ')

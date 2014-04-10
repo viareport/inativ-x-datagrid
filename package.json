@@ -1,7 +1,7 @@
 {
   "name": "inativ-x-datagrid",
   "description": "Le Datagrid aka \"excel.js\"",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "git://github.com:viareport/inativ-x-datagrid.git"
