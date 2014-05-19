@@ -266,7 +266,10 @@ require('inativ-x-inputfilter');
                     }
                     tdHeader.innerHTML = "<div class='x-datagrid-cell'>" + colHeader.value + "</div>";
                     if (colHeader.filter) {
-                        var filter = document.createElement('x-inputfilter');
+                        var renderer = (typeof colHeader.filter === 'function' && colHeader.filter) || function () {
+                            return document.createElement('x-inputfilter');
+                        };
+                        var filter = renderer();
                         if (colHeader.defaultFilter) {
                             filter.setAttribute('defaultFilter', colHeader.defaultFilter);
                             this._filters[coldIdx] = colHeader.defaultFilter;
